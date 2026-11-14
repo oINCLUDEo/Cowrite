@@ -1,0 +1,1 @@
+"""Cowrite backend application."""
