@@ -7,13 +7,21 @@ __pycache__/
 .mypy_cache/
 .coverage
 htmlcov/
+coverage.xml
 
 # Env
 .env
+.env.production
+.release
+backups/
+/exports/
+.hypothesis/
 
 # Node
 node_modules/
 dist/
+test-results/
+playwright-report/
 
 # IDE / OS
 .idea/
