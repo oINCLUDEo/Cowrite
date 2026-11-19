@@ -1,0 +1,163 @@
+name: cowrite
+
+services:
+  # Статическая сборка React и единая точка входа для браузера.
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--forwarded-allow-ips", "*"]
+    # REST и CRDT-комнаты. Миграции должны завершиться до старта API.
+    build:
+      context: ./backend
+    environment:
+      APP_NAME: ${APP_NAME:-Cowrite}
+      DEBUG: ${DEBUG:-false}
+      API_ROOT_PATH: /api
+      JWT_SECRET: ${JWT_SECRET:-cowrite-local-development-secret-change-before-deploy}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://localhost:8080/api/auth/github/callback}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-["http://localhost:8080"]}
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      EXPORTS_DIR: /app/exports
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cowrite}:${POSTGRES_PASSWORD:-cowrite-local}@postgres:5432/${POSTGRES_DB:-cowrite}
+      REDIS_CACHE_URL: redis://redis:6379/0
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    init: true
+    volumes:
+      - exports_data:/app/exports
+
+  worker:
+    build:
+      context: ./backend
+    command: ["celery", "-A", "app.worker:celery", "worker", "--loglevel=INFO", "--concurrency=2"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cowrite}:${POSTGRES_PASSWORD:-cowrite-local}@postgres:5432/${POSTGRES_DB:-cowrite}
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      EXPORTS_DIR: /app/exports
+    volumes:
+      - exports_data:/app/exports
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "celery", "-A", "app.worker:celery", "inspect", "ping", "--timeout=3"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+    init: true
+
+  beat:
+    build:
+      context: ./backend
+    command: ["celery", "-A", "app.worker:celery", "beat", "--loglevel=INFO", "--schedule=/tmp/cowrite-beat"]
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      disable: true
+    init: true
+
+  mailpit:
+    image: axllent/mailpit:v1.29
+    ports:
+      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"
+
+  prometheus:
+    image: prom/prometheus:v3.8.0
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+
+  migrate:
+    # Разовый запуск; успешное завершение — exit code 0, а не статус healthy.
+    build:
+      context: ./backend
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cowrite}:${POSTGRES_PASSWORD:-cowrite-local}@postgres:5432/${POSTGRES_DB:-cowrite}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cowrite}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cowrite-local}
+      POSTGRES_DB: ${POSTGRES_DB:-cowrite}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7.4
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  # Данные остаются после docker compose down без флага --volumes.
+  postgres_data:
+  redis_data:
+  exports_data:
+
+configs:
+  prometheus_config:
+    content: |
+      global:
+        scrape_interval: 15s
+      scrape_configs:
+        - job_name: cowrite
+          static_configs:
+            - targets: [api:8000]
