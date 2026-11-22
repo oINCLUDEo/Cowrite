@@ -21,8 +21,12 @@ async def export(
     async with mutation_lock(rooms, document_id):
         job_id = await service.create(session, rooms, document_id, user.id)
     try:
-        await run_in_threadpool(pdf.apply_async, args=[str(job_id)], task_id=str(job_id),
-                                headers={"request_id": getattr(request.state, "request_id", "")})
+        await run_in_threadpool(
+            pdf.apply_async,
+            args=[str(job_id)],
+            task_id=str(job_id),
+            headers={"request_id": getattr(request.state, "request_id", "")},
+        )
     except Exception:
         await service.queue_failed(session, job_id)
         raise HTTPException(

@@ -25,7 +25,7 @@ services:
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
       GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://localhost:8080/api/auth/github/callback}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-["http://localhost:8080"]}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-["http://localhost:8080","http://127.0.0.1:8080"]}
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
       SMTP_HOST: mailpit
