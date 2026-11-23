@@ -18,7 +18,7 @@ from app.core.logging import configure_log_redaction
 from app.core.metrics import MetricsMiddleware
 from app.core.middleware import RequestMiddleware
 from app.core.roles import RoleCache
-from app.core.schemas import ErrorResponse
+from app.core.schemas import ErrorResponse, error_response
 from app.modules.auth.router import router as auth_router
 from app.modules.collab.rooms import RoomManager
 from app.modules.collab.router import router as collaboration_router
@@ -66,6 +66,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         debug=config.debug,
         lifespan=lifespan,
         root_path=config.api_root_path,
+        description=(
+            "REST API платформы совместного редактирования. "
+            "Аутентификация — JWT Bearer (кроме `/auth/register`, `/auth/login` и "
+            "OAuth-редиректов). Формат ошибок единый: "
+            '`{"detail": {"code": "...", "message": "..."}}`. '
+            "Все запросы ограничены по IP: 120/мин, для входа — 10/мин; "
+            "ответ 429 содержит `Retry-After`. "
+            "Совместное редактирование работает по отдельному бинарному "
+            "WebSocket-протоколу, описанному в `docs/websocket.md`."
+        ),
+        openapi_tags=[
+            {"name": "auth", "description": "Регистрация, вход по паролю и через GitHub."},
+            {"name": "documents", "description": "Документы, роли и участники."},
+            {"name": "versions", "description": "Снапшоты состояния и откат."},
+            {"name": "exports", "description": "Фоновый экспорт в PDF."},
+            {"name": "health", "description": "Проверки процесса и зависимостей."},
+        ],
         responses={
             code: {"model": ErrorResponse} for code in (400, 401, 403, 404, 409, 429, 502, 503)
         },
@@ -102,11 +119,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             {"detail": detail}, status_code=error.status_code, headers=error.headers
         )
 
-    @application.get("/health/live", response_model=HealthResponse, tags=["health"])
+    @application.get(
+        "/health/live",
+        response_model=HealthResponse,
+        tags=["health"],
+        summary="Жив ли процесс",
+        description=(
+            "Возвращает 200, если процесс API обрабатывает запросы. "
+            "Зависимости не проверяются, аутентификация не требуется."
+        ),
+    )
     async def live() -> HealthResponse:
         return HealthResponse()
 
-    @application.get("/health/ready", response_model=HealthResponse, tags=["health"])
+    @application.get(
+        "/health/ready",
+        response_model=HealthResponse,
+        tags=["health"],
+        summary="Готов ли сервис к приёму трафика",
+        description=(
+            "Выполняет `SELECT 1` в PostgreSQL и `PING` в Redis. "
+            "При недоступности любой зависимости возвращает 503."
+        ),
+        responses={503: error_response("PostgreSQL или Redis недоступны.")},
+    )
     async def ready(request: Request) -> HealthResponse:
         try:
             async with request.app.state.database.sessions() as session:
@@ -116,9 +152,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(503, detail="Dependencies unavailable") from None
         return HealthResponse()
 
-    @application.get("/health", response_model=HealthResponse, tags=["health"])
+    @application.get(
+        "/health",
+        response_model=HealthResponse,
+        tags=["health"],
+        summary="Базовая проверка доступности",
+        description="Проверка процесса API. Доступность PostgreSQL и Redis здесь не проверяется.",
+    )
     async def health() -> HealthResponse:
-        """Проверка процесса API. Доступность PostgreSQL и Redis здесь не проверяется."""
         return HealthResponse()
 
     return application

@@ -5,6 +5,29 @@
 `generation` — целое поколение из REST-метаданных. Заголовок `Origin`
 должен точно соответствовать `ALLOWED_ORIGINS`. Query нельзя журналировать.
 
+## Подключение
+
+Сначала GET `/documents/{id}` возвращает `generation`, затем открывается
+соединение. Фронтенд использует `WebsocketProvider` из `y-websocket`:
+
+```ts
+const provider = new WebsocketProvider(
+  `${protocol}//${window.location.host}/ws/documents`, // без id в baseURL
+  documentId,                                           // roomName
+  ydoc,
+  {
+    connect: false,
+    params: {
+      token: accessToken,
+      generation: String(metadata.generation),
+    },
+  },
+)
+```
+
+`connect: false` нужен, чтобы токен и поколение попали в query до handshake.
+TipTap привязывается к тому же `Y.Doc` через `Collaboration.configure({ field: 'default' })`.
+
 ## Бинарный канал
 
 Применяется y-websocket / y-protocols, не произвольный JSON.
