@@ -1,6 +1,16 @@
 name: cowrite
 
 services:
+  # Статическая сборка React и единая точка входа для браузера.
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
   api:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--forwarded-allow-ips", "*"]
     # REST и CRDT-комнаты. Миграции должны завершиться до старта API.
@@ -9,7 +19,7 @@ services:
     environment:
       APP_NAME: ${APP_NAME:-Cowrite}
       DEBUG: ${DEBUG:-false}
-      API_ROOT_PATH: ""
+      API_ROOT_PATH: /api
       JWT_SECRET: ${JWT_SECRET:-cowrite-local-development-secret-change-before-deploy}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
