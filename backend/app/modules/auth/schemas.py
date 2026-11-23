@@ -21,6 +21,17 @@ class Credentials(BaseModel):
 
 
 class RegisterRequest(Credentials):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "email": "reader@example.com",
+                    "password": "sensitive-passphrase",
+                    "display_name": "Читатель",
+                }
+            ]
+        }
+    )
     display_name: Annotated[
         str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)
     ]
@@ -28,13 +39,35 @@ class RegisterRequest(Credentials):
 
 class UserResponse(BaseModel):
     # Хеш пароля и внутренние данные входа в ответ не включаем.
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "examples": [
+                {
+                    "id": "0b6a0a6f-6f2e-4f7b-8f5d-1c2d3e4f5061",
+                    "email": "reader@example.com",
+                    "display_name": "Читатель",
+                }
+            ]
+        },
+    )
     id: uuid.UUID
     email: str
     display_name: str
 
 
 class TokenResponse(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "token_type": "bearer",
+                    "expires_in": 1800,
+                }
+            ]
+        }
+    )
     access_token: str
     token_type: Literal["bearer"] = "bearer"
     expires_in: int = 1800

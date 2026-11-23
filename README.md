@@ -26,6 +26,8 @@ CI, публикация GHCR и SSH-деплой описаны и реализ
 
 ![Редактор Cowrite](docs/editor.png)
 
+![Форма входа](docs/login.png)
+
 ## Локальный запуск
 
 Нужен Docker с Docker Compose v2+. Скопируйте `.env.example` в `.env`
@@ -53,6 +55,33 @@ Nginx на порту 8080 обслуживает frontend и проксируе
 Если порты заняты, измените `API_PORT`, `POSTGRES_PORT` и `REDIS_PORT` в `.env`.
 Для прямого запуска API на хосте также обновите порты в `DATABASE_URL` и
 `REDIS_CACHE_URL`; внутри Compose используются стандартные контейнерные порты.
+
+## Переменные окружения
+
+| Переменная | По умолчанию | Описание |
+|---|---|---|
+| `APP_NAME` | `Cowrite` | Имя приложения |
+| `DEBUG` | `false` | Режим отладки |
+| `API_ROOT_PATH` | `` | Префикс при прокси через Nginx (`/api`) |
+| `JWT_SECRET` | *демо-ключ* | Секрет JWT; минимум 32 байта |
+| `GITHUB_CLIENT_ID` | — | OAuth App Client ID |
+| `GITHUB_CLIENT_SECRET` | — | OAuth App Client Secret |
+| `GITHUB_REDIRECT_URI` | `http://localhost:8080/api/auth/github/callback` | Callback URL |
+| `FRONTEND_URL` | `http://localhost:8080` | Origin фронтенда |
+| `ALLOWED_ORIGINS` | `["http://localhost:8080"]` | Разрешённые origin для CORS и WebSocket |
+| `CELERY_BROKER_URL` | `redis://localhost:6379/1` | Брокер Celery |
+| `CELERY_RESULT_BACKEND` | `redis://localhost:6379/2` | Backend Celery |
+| `SMTP_HOST` | `localhost` | SMTP-сервер для приглашений |
+| `SMTP_PORT` | `1025` | Порт SMTP |
+| `SMTP_STARTTLS` | `false` | Включить STARTTLS |
+| `EXPORTS_DIR` | `exports` | Папка для PDF-файлов |
+| `LOG_LEVEL` | `INFO` | Уровень логирования |
+| `DATABASE_URL` | `postgresql+asyncpg://…` | Адрес PostgreSQL |
+| `REDIS_CACHE_URL` | `redis://localhost:6379/0` | Redis для кэша ролей |
+| `TEST_DATABASE_URL` | — | Отдельная БД для тестов |
+
+Полный список — в `.env.example`. Переменные окружения имеют приоритет над
+`.env`.
 
 ## Разработка бэкенда
 
@@ -135,8 +164,33 @@ REST и WebSocket проверяют его и права на документ.
 
 - [Архитектура](docs/architecture.md), [модель данных](docs/data-model.md).
 - [WebSocket](docs/websocket.md), [OpenAPI](docs/openapi.json).
+- [Соответствие требованиям](docs/requirements.md) — где закрыт каждый пункт задания.
+- [Руководство пользователя](docs/user-guide.md) — путь по интерфейсу от регистрации до PDF.
 - Обновить REST-контракт: `cd backend` → `uv run python -m app.contracts`.
 - [VPS, TLS, GHCR, выкладка и откат](docs/deployment.md).
 
 Перед production-запуском нужно настроить OAuth App, SMTP, секреты GitHub Actions,
 целевой сервер и HTTPS. Инструкции приведены в руководстве по развёртыванию.
+
+## CI/CD
+
+GitHub Actions (`ci.yml`) запускается для каждого PR в `develop` и `main`:
+
+| Job | Что делает |
+|---|---|
+| `Backend checks` | Ruff lint, format, mypy, pytest (Postgres и Redis как services) |
+| `Frontend checks` | ESLint, TypeScript, сборка, `npm audit` |
+| `Docker build` | `docker compose config` + сборка backend и frontend без публикации |
+| `Browser collaboration` | Поднимает Compose, проверяет совместное редактирование через Playwright |
+
+Проходной процент покрытия не задаётся: обязательна работающая unit/integration/API
+тестовая база.
+
+При успешном merge в `main` (`release.yml`):
+1. `publish` — собирает и пушит образы в GHCR с тегами `latest` и SHA коммита.
+2. `deploy` — по SSH на сервер загружает `docker-compose.prod.yml` и запускает `deploy.sh`,
+   который делает `pg_dump`, применяет миграции, проверяет readiness.
+
+Защита веток `main` и `develop` требует минимум 1 approve и зелёный CI.
+Инструкции по настройке — в [docs/development.md](docs/development.md).
+

@@ -14,6 +14,10 @@ def exported_schema() -> dict[str, object]:
 
 
 if __name__ == "__main__":
+    # newline="\n" фиксирует перевод строк: иначе на Windows выгрузка отличается
+    # от CI на Linux только переносами, и тест контракта даёт ложный diff.
     CONTRACT.write_text(
-        json.dumps(exported_schema(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        json.dumps(exported_schema(), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
