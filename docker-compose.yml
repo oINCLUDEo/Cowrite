@@ -1,6 +1,16 @@
 name: cowrite
 
 services:
+  # Статическая сборка React и единая точка входа для браузера.
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
   api:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--forwarded-allow-ips", "*"]
     # REST и CRDT-комнаты. Миграции должны завершиться до старта API.
@@ -9,13 +19,13 @@ services:
     environment:
       APP_NAME: ${APP_NAME:-Cowrite}
       DEBUG: ${DEBUG:-false}
-      API_ROOT_PATH: ""
+      API_ROOT_PATH: /api
       JWT_SECRET: ${JWT_SECRET:-cowrite-local-development-secret-change-before-deploy}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
       GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://localhost:8080/api/auth/github/callback}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-["http://localhost:8080","http://127.0.0.1:8080"]}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-["http://localhost:8080"]}
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
       SMTP_HOST: mailpit
