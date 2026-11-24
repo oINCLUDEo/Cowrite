@@ -162,6 +162,7 @@ REST и WebSocket проверяют его и права на документ.
 
 ## Документация и поставка
 
+- [Техническое задание](docs/technical-specification.md) и его [Word-версия](docs/ТЗ-Cowrite.docx).
 - [Архитектура](docs/architecture.md), [модель данных](docs/data-model.md).
 - [WebSocket](docs/websocket.md), [OpenAPI](docs/openapi.json).
 - [Соответствие требованиям](docs/requirements.md) — где закрыт каждый пункт задания.
