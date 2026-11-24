@@ -3,13 +3,14 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
-import { Export, History, Share } from './Panels'
+import { History, Share } from './Panels'
 import { api, type DocumentMeta, type Role } from './api'
 import { BackIcon, DownloadIcon, HistoryIcon, MoreIcon, ShareIcon } from './icons'
 import { connectionLabels } from './labels'
+import { usePdfExport } from './pdf'
 import { useCollabConnection, useCollabSession, type ConnectionStatus } from './useCollab'
 
-type Panel = 'share' | 'history' | 'export' | null
+type Panel = 'share' | 'history' | null
 
 export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; reload: () => void; back: () => void }) {
   const documentId = metadata.id
@@ -17,6 +18,8 @@ export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; rel
   const { session, status, saved, role, error, setError } = collab
   const [panel, setPanel] = useState<Panel>(null)
   const [title, setTitle] = useState(metadata.title)
+  // Файл называется так, как документ назван на экране сейчас.
+  const pdf = usePdfExport(documentId, title)
 
   const editor = useEditor({
     extensions: [
@@ -46,9 +49,11 @@ export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; rel
 
   return (
     <>
-      <EditorHeader back={back} documentId={documentId} metadata={metadata} title={title} setTitle={setTitle} role={role} setError={setError} status={status} saved={saved} panel={panel} setPanel={setPanel} />
+      <EditorHeader back={back} documentId={documentId} metadata={metadata} title={title} setTitle={setTitle} role={role} setError={setError} status={status} saved={saved} panel={panel} setPanel={setPanel} exporting={pdf.busy} onExport={() => { void pdf.start() }} />
       {error && <p role="alert">{error}</p>}
-      {panel === 'export' && <Export doc={metadata} />}
+      {/* На широком экране ход экспорта виден на самой кнопке, на телефоне — этой строкой: кнопка спрятана в меню. */}
+      {pdf.busy && <p className="page-note pdf-progress" role="status">Готовим PDF…</p>}
+      {pdf.error && <p className="page-note" role="alert">{pdf.error}</p>}
       {/* Обёртка есть всегда: при открытии боковой панели редактор не пересоздаётся, а встаёт левее неё. */}
       <div className={side ? 'workspace with-side' : 'workspace'}>
         <div className="workspace-main">
@@ -69,11 +74,13 @@ export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; rel
 type HeaderProps = {
   back: () => void; documentId: string; metadata: DocumentMeta; title: string; setTitle: (title: string) => void
   role: Role; setError: (error: string) => void; status: ConnectionStatus; saved: string; panel: Panel; setPanel: (panel: Panel) => void
+  exporting: boolean; onExport: () => void
 }
 
 // Шапка и панель объявлены на уровне модуля: внутри Editor они пересоздавались бы на каждом рендере,
 // и поле названия теряло бы фокус после каждой буквы.
-function EditorHeader({ back, documentId, metadata, title, setTitle, role, setError, status, saved, panel, setPanel }: HeaderProps) {
+function EditorHeader({ back, documentId, metadata, title, setTitle, role, setError, status, saved, panel, setPanel, exporting, onExport }: HeaderProps) {
+  const pdfLabel = exporting ? 'Готовим PDF…' : 'PDF'
   const toggle = (next: Exclude<Panel, null>) => setPanel(panel === next ? null : next)
   const pressed = (name: Panel) => (panel === name ? ' on' : '')
   return (
@@ -89,13 +96,13 @@ function EditorHeader({ back, documentId, metadata, title, setTitle, role, setEr
       </div>
       <div className="doc-actions">
         <button className={`btn-ghost wide-only${pressed('history')}`} aria-expanded={panel === 'history'} onClick={() => toggle('history')}><HistoryIcon />История</button>
-        <button className={`btn-ghost wide-only${pressed('export')}`} aria-expanded={panel === 'export'} onClick={() => toggle('export')}><DownloadIcon />PDF</button>
+        <button className="btn-ghost wide-only" disabled={exporting} aria-busy={exporting} onClick={onExport}><DownloadIcon />{pdfLabel}</button>
         {role === 'owner' && <button className={`btn-primary share${pressed('share')}`} aria-expanded={panel === 'share'} onClick={() => toggle('share')}><ShareIcon /><span className="label">Поделиться</span></button>}
         {/* На телефоне «История» и «PDF» уходят в меню; Popover сам закрывается по Esc и клику мимо. */}
         <button className="icon-button narrow-only" popoverTarget="doc-more" aria-label="Ещё" title="Ещё"><MoreIcon /></button>
         <div id="doc-more" className="menu" popover="auto">
           <button popoverTarget="doc-more" popoverTargetAction="hide" onClick={() => toggle('history')}><HistoryIcon />История</button>
-          <button popoverTarget="doc-more" popoverTargetAction="hide" onClick={() => toggle('export')}><DownloadIcon />PDF</button>
+          <button popoverTarget="doc-more" popoverTargetAction="hide" disabled={exporting} onClick={onExport}><DownloadIcon />{pdfLabel}</button>
         </div>
       </div>
     </header>

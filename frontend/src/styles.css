@@ -30,8 +30,6 @@ button:disabled { color: var(--faint); background: var(--surface); border-color:
 .document-title { flex: 1; text-align: left; font-size: 17px; }
 .document-row time, .document-row span { color: var(--muted); font-size: 13px; }
 .pagination { display: flex; gap: 10px; margin: 12px 0; }
-.panel { max-width: 850px; margin: 20px auto; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
-.panel h2 { margin-top: 0; font-size: 19px; }
 [role="alert"] { color: var(--danger); }
 * { box-sizing: border-box; }
 body { margin: 0; }
@@ -70,6 +68,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .side-head h2 { flex: 1; margin: 0; font-size: 20px; }
 .side-body { padding: 0 24px 24px; }
 .scrim { display: none; }
+.page-note { margin: 0; padding: 8px 16px; font-size: 14px; }
+.pdf-progress { display: none; }
 .side-subhead { margin: 16px 0 4px; font: 600 13px/1.4 var(--font-ui); letter-spacing: 0; color: var(--muted); }
 .share-form { display: grid; gap: 8px; }
 .share-form > div { display: flex; gap: 8px; }
@@ -119,6 +119,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
   .doc-actions .narrow-only { display: inline-flex; }
   .doc-actions .share, .doc-actions .share:hover:not(:disabled) { width: 40px; height: 40px; margin: 0; padding: 0; border-color: transparent; background: transparent; color: var(--ink); }
   .doc-actions .share .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .pdf-progress { display: block; background: var(--accent-soft); color: var(--accent-hover); }
   .side-panel { top: auto; left: 0; width: auto; height: 85vh; border-left: 0; border-radius: 16px 16px 0 0; }
   .side-panel::before { content: ""; display: block; width: 36px; height: 4px; margin: 8px auto 0; border-radius: 2px; background: var(--border-strong); }
   .side-head { padding: 8px 8px 8px 16px; }

@@ -42,11 +42,8 @@ test('two browsers synchronize text, formatting and presence', async ({ browser 
     await page1.getByRole('button', { name: 'История', exact: true }).click()
     await page1.getByRole('button', { name: 'Сохранить версию' }).click()
     await expect(page1.getByRole('button', { name: 'Восстановить' })).toHaveCount(1)
+    const download = page1.waitForEvent('download', { timeout: 30000 })
     await page1.getByRole('button', { name: 'PDF', exact: true }).click()
-    await page1.getByRole('button', { name: 'Создать PDF' }).click()
-    await expect(page1.getByRole('button', { name: 'Скачать PDF' })).toBeVisible({ timeout: 30000 })
-    const download = page1.waitForEvent('download')
-    await page1.getByRole('button', { name: 'Скачать PDF' }).click()
     expect((await download).suggestedFilename()).toMatch(/\.pdf$/)
     expect(errors).toEqual([])
   } finally {

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState, type ReactNode } from 'react'
-import { api, apiResponse, type DocumentMeta, type ExportAccepted, type ExportJob, type ExportStatus, type Member, type Version } from './api'
+import { api, type DocumentMeta, type Member, type Version } from './api'
 import { BookmarkPlusIcon, CloseIcon } from './icons'
 import { formatDay, formatTime, roleLabels, versionKindLabels } from './labels'
 import { PAGE_SIZE, Pagination } from './Pagination'
@@ -82,50 +82,4 @@ export function History({ doc, onRestore, onClose }: { doc: DocumentMeta; onRest
     {(offset > 0 || versions.length >= PAGE_SIZE) && <Pagination offset={offset} count={versions.length} onChange={setOffset} />}
     {error && <p role="alert">{error}</p>}
   </SidePanel>
-}
-
-export function Export({ doc }: { doc: DocumentMeta }) {
-  const [jobId, setJobId] = useState<string | null>(null)
-  const [state, setState] = useState<ExportStatus | ''>('')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-  useEffect(() => {
-    if (!jobId) return
-    let active = true
-    let timer: ReturnType<typeof setTimeout>
-    async function poll() {
-      try {
-        const result = await api<ExportJob>(`/exports/${jobId}`)
-        if (!active) return
-        setState(result.status)
-        if (result.status === 'failed') setError('Не удалось создать PDF')
-        else if (result.status !== 'succeeded') timer = setTimeout(() => { void poll() }, 2000)
-      } catch (reason) {
-        if (active) {
-          setState('failed')
-          setError(reason instanceof Error ? reason.message : 'Ошибка экспорта')
-        }
-      }
-    }
-    void poll()
-    return () => { active = false; clearTimeout(timer) }
-  }, [jobId])
-  async function download() {
-    try {
-      const response = await apiResponse(`/exports/${jobId}/file`)
-      const url = URL.createObjectURL(await response.blob())
-      const anchor = window.document.createElement('a')
-      anchor.href = url; anchor.download = `${doc.title}.pdf`; anchor.click()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Ошибка скачивания') }
-  }
-  return <section className="panel" aria-label="Экспорт"><h2>PDF</h2>
-    <button disabled={busy || state === 'queued' || state === 'running'} onClick={() => {
-      setBusy(true); setError('')
-      void api<ExportAccepted>(`/documents/${doc.id}/export`, { method: 'POST' }).then((result) => { setState('queued'); setJobId(result.task_id) }).catch((reason: Error) => setError(reason.message)).finally(() => setBusy(false))
-    }}>Создать PDF</button>
-    {(state === 'queued' || state === 'running') && <p role="status">Подготовка…</p>}
-    {state === 'succeeded' && <button className="btn-primary" onClick={() => { void download() }}>Скачать PDF</button>}
-    {error && <p role="alert">{error}</p>}
-  </section>
 }
