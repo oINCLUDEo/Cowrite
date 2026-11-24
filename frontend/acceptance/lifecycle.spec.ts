@@ -24,7 +24,7 @@ test('Mailpit, queued export, worker redelivery and API persistence', async ({ b
     const editor = page.getByRole('textbox', { name: 'Содержимое документа' })
     await editor.fill('Подтверждённое состояние после перезапуска')
     await expect(page.getByRole('status')).toHaveText('Сохранено')
-    await page.getByRole('button', { name: 'Доступ', exact: true }).click()
+    await page.getByRole('button', { name: 'Поделиться', exact: true }).click()
     await page.getByRole('textbox', { name: 'Email участника' }).fill(invited.email)
     await page.getByRole('button', { name: 'Предоставить доступ' }).click()
     await expect(page.getByText(invited.email, { exact: true })).toBeVisible()

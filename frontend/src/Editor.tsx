@@ -5,6 +5,7 @@ import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
 import { Export, History, Share } from './Panels'
 import { api, type DocumentMeta, type Role } from './api'
+import { BackIcon, DownloadIcon, HistoryIcon, MoreIcon, ShareIcon } from './icons'
 import { connectionLabels } from './labels'
 import { useCollabConnection, useCollabSession, type ConnectionStatus } from './useCollab'
 
@@ -39,16 +40,28 @@ export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; rel
   useEffect(() => { editor?.setEditable(role !== 'viewer') }, [editor, role])
 
   useCollabConnection(collab, metadata, reload)
+  // «Доступ» видит только владелец: если роль сменилась, панель не показывается, как и раньше.
+  const side = panel === 'history' || (panel === 'share' && role === 'owner')
+  const close = () => setPanel(null)
 
   return (
     <>
       <EditorHeader back={back} documentId={documentId} metadata={metadata} title={title} setTitle={setTitle} role={role} setError={setError} status={status} saved={saved} panel={panel} setPanel={setPanel} />
       {error && <p role="alert">{error}</p>}
-      {panel === 'share' && role === 'owner' && <Share doc={{ ...metadata, role }} />}
-      {panel === 'history' && <History doc={{ ...metadata, role }} onRestore={reload} />}
       {panel === 'export' && <Export doc={metadata} />}
-      {role !== 'viewer' && <EditorToolbar editor={editor} />}
-      <main className="paper"><EditorContent editor={editor} /></main>
+      {/* Обёртка есть всегда: при открытии боковой панели редактор не пересоздаётся, а встаёт левее неё. */}
+      <div className={side ? 'workspace with-side' : 'workspace'}>
+        <div className="workspace-main">
+          {role !== 'viewer' && <EditorToolbar editor={editor} />}
+          <main className="paper"><EditorContent editor={editor} /></main>
+        </div>
+        {side && <>
+          <div className="scrim" onClick={close} />
+          {panel === 'history'
+            ? <History doc={{ ...metadata, role }} onRestore={reload} onClose={close} />
+            : <Share doc={{ ...metadata, role }} onClose={close} />}
+        </>}
+      </div>
     </>
   )
 }
@@ -61,19 +74,29 @@ type HeaderProps = {
 // Шапка и панель объявлены на уровне модуля: внутри Editor они пересоздавались бы на каждом рендере,
 // и поле названия теряло бы фокус после каждой буквы.
 function EditorHeader({ back, documentId, metadata, title, setTitle, role, setError, status, saved, panel, setPanel }: HeaderProps) {
+  const toggle = (next: Exclude<Panel, null>) => setPanel(panel === next ? null : next)
+  const pressed = (name: Panel) => (panel === name ? ' on' : '')
   return (
-    <header className="editor-header">
-      <div>
-        <button className="brand text-button" onClick={back}>Cowrite</button>
-        <input aria-label="Название документа" value={title} maxLength={200} readOnly={role !== 'owner'} onChange={(event) => setTitle(event.target.value)} onBlur={() => {
-          if (role === 'owner' && title !== metadata.title) void api<DocumentMeta>(`/documents/${documentId}`, { method: 'PATCH', body: JSON.stringify({ title }) }).catch((reason: Error) => setError(reason.message))
-        }} />
+    <header className="doc-header">
+      <button className="icon-button" onClick={back} aria-label="К документам" title="К документам"><BackIcon /></button>
+      <div className="doc-title">
+        {role === 'owner'
+          ? <input className="title-input" aria-label="Название документа" value={title} maxLength={200} onChange={(event) => setTitle(event.target.value)} onBlur={() => {
+            if (title !== metadata.title) void api<DocumentMeta>(`/documents/${documentId}`, { method: 'PATCH', body: JSON.stringify({ title }) }).catch((reason: Error) => setError(reason.message))
+          }} />
+          : <h1 className="title-text">{title}</h1>}
+        <span className={`connection ${status}`} role="status">{status === 'connected' ? saved : connectionLabels[status]}</span>
       </div>
-      <span className={`connection ${status}`} role="status">{status === 'connected' ? saved : connectionLabels[status]}</span>
-      <div className="header-actions">
-        {role === 'owner' && <button onClick={() => setPanel(panel === 'share' ? null : 'share')}>Доступ</button>}
-        <button onClick={() => setPanel(panel === 'history' ? null : 'history')}>История</button>
-        <button onClick={() => setPanel(panel === 'export' ? null : 'export')}>PDF</button>
+      <div className="doc-actions">
+        <button className={`btn-ghost wide-only${pressed('history')}`} aria-expanded={panel === 'history'} onClick={() => toggle('history')}><HistoryIcon />История</button>
+        <button className={`btn-ghost wide-only${pressed('export')}`} aria-expanded={panel === 'export'} onClick={() => toggle('export')}><DownloadIcon />PDF</button>
+        {role === 'owner' && <button className={`btn-primary share${pressed('share')}`} aria-expanded={panel === 'share'} onClick={() => toggle('share')}><ShareIcon /><span className="label">Поделиться</span></button>}
+        {/* На телефоне «История» и «PDF» уходят в меню; Popover сам закрывается по Esc и клику мимо. */}
+        <button className="icon-button narrow-only" popoverTarget="doc-more" aria-label="Ещё" title="Ещё"><MoreIcon /></button>
+        <div id="doc-more" className="menu" popover="auto">
+          <button popoverTarget="doc-more" popoverTargetAction="hide" onClick={() => toggle('history')}><HistoryIcon />История</button>
+          <button popoverTarget="doc-more" popoverTargetAction="hide" onClick={() => toggle('export')}><DownloadIcon />PDF</button>
+        </div>
       </div>
     </header>
   )

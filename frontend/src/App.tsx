@@ -40,9 +40,9 @@ export function App() {
   }, [authenticated, documentId, epoch])
   if (path === '/auth/callback') return <OAuthCallback onComplete={finishLogin} />
   if (!authenticated) return <Auth onComplete={finishLogin} />
-  if (path === '/') return <><header className="editor-header"><span className="brand">Cowrite</span><button onClick={logout}>Выйти</button></header><Documents open={(id) => navigate(`/documents/${id}`)} /></>
+  if (path === '/') return <><header className="editor-header"><span className="brand">Cowrite</span><button className="btn-ghost" onClick={logout}>Выйти</button></header><Documents open={(id) => navigate(`/documents/${id}`)} /></>
   if (documentId) {
-    if (error) return <main className="auth-state"><p role="alert">{error}</p><button onClick={() => navigate('/')}>К документам</button></main>
+    if (error) return <main className="auth-state"><p role="alert">{error}</p><button className="btn-primary" onClick={() => navigate('/')}>К документам</button></main>
     if (!metadata) return <main className="auth-state" role="status">Загрузка…</main>
     return <Editor key={`${metadata.id}-${metadata.generation}-${epoch}`} metadata={metadata} reload={reload} back={() => navigate('/')} />
   }

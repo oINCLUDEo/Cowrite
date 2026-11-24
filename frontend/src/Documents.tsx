@@ -27,13 +27,13 @@ export function Documents({ open }: { open: (id: string) => void }) {
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось удалить документ') }
   }
   return <main className="document-list">
-    <div className="section-header"><h1>Документы</h1><button disabled={busy} onClick={() => { void create() }}>Новый документ</button></div>
+    <div className="section-header"><h1>Документы</h1><button className="btn-primary" disabled={busy} onClick={() => { void create() }}>Новый документ</button></div>
     {error && <p role="alert">{error}</p>}
     {documents.map((doc) => <article className="document-row" key={doc.id}>
       <button className="text-button document-title" onClick={() => open(doc.id)}>{doc.title}</button>
       <span>{roleLabels[doc.role]}</span>
       <time dateTime={doc.updated_at}>{formatDateTime(doc.updated_at)}</time>
-      {doc.role === 'owner' && <button onClick={() => { void remove(doc) }} aria-label={`Удалить ${doc.title}`}>Удалить</button>}
+      {doc.role === 'owner' && <button className="btn-danger" onClick={() => { void remove(doc) }} aria-label={`Удалить ${doc.title}`}>Удалить</button>}
     </article>)}
     <Pagination offset={offset} count={documents.length} onChange={setOffset} />
   </main>
