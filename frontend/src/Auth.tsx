@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { api, type User } from './api'
+import { api, type TokenResponse, type User } from './api'
 import { setAccessToken } from './session'
 
 export function Auth({ onComplete }: { onComplete: () => void }) {
@@ -19,7 +19,7 @@ export function Auth({ onComplete }: { onComplete: () => void }) {
         // Аккаунт уже создан: при сбое входа повторяем вход, не регистрацию.
         setRegister(false)
       }
-      const result = await api<{ access_token: string }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+      const result = await api<TokenResponse>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
       setAccessToken(result.access_token)
       onComplete()
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Не удалось войти') }
