@@ -33,11 +33,11 @@ sequenceDiagram
   API->>PG: Документ и права
   API-->>A: Yjs sync
   A->>API: Бинарное обновление
-  Note over API: Общая блокировка документа; роль; размер на копии
+  Note over API: Общая блокировка документа, роль, размер на копии
   API-->>B: Обновление Yjs
   API-->>A: status: unsaved
   Note over API: Debounce 2 с, максимум 10 с
-  API->>PG: Состояние, revision + 1; commit
+  API->>PG: Состояние, revision + 1, commit
   API-->>A: status: saved
 ```
 
