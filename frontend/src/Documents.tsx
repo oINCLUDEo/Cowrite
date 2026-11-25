@@ -55,6 +55,6 @@ export function Documents({ open }: { open: (id: string) => void }) {
       <time dateTime={doc.updated_at}>{formatDateTime(doc.updated_at)}</time>
       {doc.role === 'owner' && <button className="btn-danger" onClick={() => { void remove(doc) }} aria-label={`Удалить ${doc.title}`}>Удалить</button>}
     </article>)}
-    <Pagination offset={offset} count={documents.length} onChange={setOffset} />
+    {(offset > 0 || documents.length >= PAGE_SIZE) && <Pagination offset={offset} count={documents.length} onChange={setOffset} />}
   </main>
 }

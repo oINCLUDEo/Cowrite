@@ -73,6 +73,9 @@ button:disabled { color: var(--faint); background: var(--surface); border-color:
 /* На входе контур чёрный, как у rokii; в рабочем списке светлый, как водяной знак, чтобы не спорить с документами. */
 .wordmark-color { flood-color: var(--ink); }
 .list-page .wordmark-color { flood-color: var(--border-strong); }
+/* На входе слово всегда полного размера у нижнего края окна, за карточкой: прокрутку не добавляет,
+   а более высокая форма регистрации просто ложится поверх букв. */
+.auth-page .wordmark { position: absolute; left: 0; right: 0; bottom: 0; z-index: -1; margin: 0 auto; padding: 0 24px; }
 .section-header, .document-row { display: flex; align-items: center; gap: 20px; justify-content: space-between; }
 .document-row { padding: 18px 0; border-bottom: 1px solid var(--border); }
 .document-title { flex: 1; text-align: left; font-size: 17px; }
@@ -141,8 +144,11 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
   .scrim { display: block; position: fixed; inset: 0; z-index: 10; background: rgba(11, 18, 32, .2); }
   .side-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 11; width: 360px; height: auto; box-shadow: 0 8px 24px rgba(11, 18, 32, .12); }
 }
-.editor-header { padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-bottom: 1px solid var(--border); }
-.brand { font-family: var(--font-display); font-size: 25px; font-weight: 800; letter-spacing: -.03em; color: var(--accent); text-decoration: none; }
+/* Шапка списка (VIS-19): слева значок приложения, справа кружок с буквой, имя аккаунта и «Выйти». */
+.list-header { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px 0 24px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.app-icon { margin-right: auto; }
+.account { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.avatar { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-hover); font-size: 13px; font-weight: 700; }
 .save-status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
 .save-status svg { width: 16px; height: 16px; }
 .save-status.offline svg { color: var(--warning); }
@@ -174,7 +180,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .collaboration-carets__label { border-radius: 3px 3px 3px 0; color: white; font-size: 12px; font-weight: 600; left: -1px; line-height: normal; padding: 2px 5px; position: absolute; top: -1.5em; user-select: none; white-space: nowrap; }
 .auth-state { max-width: 680px; margin: 15vh auto; padding: 48px 32px; text-align: center; }
 .auth-state h1 { font-size: 24px; margin: 0 0 16px; }
-@media (max-width: 700px) { .editor-header { padding: 16px; gap: 12px; } .paper { margin: 0; border-radius: 0; box-shadow: none; min-height: 0; } .document-editor { padding: 24px 16px; min-height: calc(100vh - 104px); } .auth-state { margin: 30px 12px; } .empty-hero h1, .empty-hero p { font-size: 34px; } .tile-row { grid-template-columns: 1fr; } .ghost-tile { display: none; } .auth-page { padding: 0; background: var(--surface); } .auth-page::before { display: none; } .auth-card { max-width: none; padding: 32px 16px 8px; border: 0; border-radius: 0; box-shadow: none; } }
+@media (max-width: 700px) { .list-header { padding: 0 4px 0 16px; } .account-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } .paper { margin: 0; border-radius: 0; box-shadow: none; min-height: 0; } .document-editor { padding: 24px 16px; min-height: calc(100vh - 104px); } .auth-state { margin: 30px 12px; } .empty-hero h1, .empty-hero p { font-size: 34px; } .tile-row { grid-template-columns: 1fr; } .ghost-tile { display: none; } .auth-page { padding: 0; background: var(--surface); } .auth-page::before { display: none; } .auth-card { max-width: none; padding: 32px 16px 8px; border: 0; border-radius: 0; box-shadow: none; } }
 @media (max-width: 700px) {
   .doc-header { padding: 0 4px; gap: 2px; }
   /* Чёлка с вогнутыми углами помещается и в 360 px: без промежутков между группами, кнопки 38 px. */

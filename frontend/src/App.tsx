@@ -4,8 +4,25 @@ import { Auth } from './Auth'
 import { Documents } from './Documents'
 import { Editor } from './Editor'
 import { Wordmark } from './icons'
-import { api, type DocumentMeta } from './api'
+import { api, type DocumentMeta, type User } from './api'
 import { getAccessToken, logout } from './session'
+
+// Шапка списка: видно, под каким аккаунтом выполнен вход. На телефоне имя скрыто визуально, кружок с буквой остаётся.
+// Слева только значок приложения (тот же, что во вкладке): название уже есть контурным словом внизу страницы.
+function ListHeader() {
+  const [name, setName] = useState('')
+  useEffect(() => {
+    let active = true
+    // Имя только подпись: если запрос не удался, шапка остаётся без него.
+    void api<User>('/users/me').then((user) => { if (active) setName(user.display_name.trim()) }).catch(() => undefined)
+    return () => { active = false }
+  }, [])
+  return <header className="list-header">
+    <img className="app-icon" src="/favicon.svg" alt="Cowrite" width={28} height={28} />
+    {name && <span className="account"><span className="avatar" aria-hidden="true">{[...name][0].toUpperCase()}</span><span className="account-name">{name}</span></span>}
+    <button className="btn-ghost" onClick={logout}>Выйти</button>
+  </header>
+}
 
 export function App() {
   const [path, setPath] = useState(window.location.pathname)
@@ -42,7 +59,7 @@ export function App() {
   if (path === '/auth/callback') return <OAuthCallback onComplete={finishLogin} />
   if (!authenticated) return <Auth onComplete={finishLogin} />
   if (path === '/') return <div className="list-page">
-    <header className="editor-header"><span className="brand">Cowrite</span><button className="btn-ghost" onClick={logout}>Выйти</button></header>
+    <ListHeader />
     <Documents open={(id) => navigate(`/documents/${id}`)} />
     <Wordmark />
   </div>

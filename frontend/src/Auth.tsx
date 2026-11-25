@@ -63,8 +63,9 @@ export function Auth({ onComplete }: { onComplete: () => void }) {
           Войти через GitHub
         </a>
       </form>
+      {/* Ссылка внутри карточки: на регистрации карточка ложится на контурное слово, и ссылка не попадает на линии букв. */}
+      <button type="button" className="link-button" onClick={() => { setRegister(!register); setError('') }}>{register ? 'Уже есть аккаунт' : 'Создать аккаунт'}</button>
     </div>
-    <button type="button" className="link-button" onClick={() => { setRegister(!register); setError('') }}>{register ? 'Уже есть аккаунт' : 'Создать аккаунт'}</button>
     <Wordmark />
   </main>
 }
