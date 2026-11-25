@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
-import { createDocument, login, register } from '../tests/helpers'
+import { createDocument, register } from '../tests/helpers'
 
 function compose(...args: string[]) {
   return execFileSync('docker', ['compose', ...args], {
@@ -18,7 +18,7 @@ test('Mailpit, queued export, worker redelivery and API persistence', async ({ b
   const recipient = await member.newPage()
   let workerStopped = false
   try {
-    const account = await register(page)
+    await register(page)
     const invited = await register(recipient)
     const path = await createDocument(page)
     const editor = page.getByRole('textbox', { name: 'Содержимое документа' })
@@ -66,8 +66,8 @@ test('Mailpit, queued export, worker redelivery and API persistence', async ({ b
       const ready = await request.get('/api/health/ready')
       return ready.status()
     }, { timeout: 45000 }).toBe(200)
+    // Токен живёт в sessionStorage вкладки, поэтому после F5 входить заново не нужно.
     await page.reload()
-    await login(page, account)
     await expect(page).toHaveURL(new RegExp(`${path}$`))
     await expect(editor).toHaveText('Подтверждённое состояние после перезапуска')
   } finally {
