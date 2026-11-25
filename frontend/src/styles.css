@@ -1,0 +1,283 @@
+/* Токены из docs/frontend-audit/reports/5-visual.md (VIS-1) с поправками судьи: рамка полей и плейсхолдер темнее. */
+:root {
+  --bg: #F7F9FD; --surface: #FFFFFF; --surface-2: #EEF2F9;
+  --ink: #0B1220; --muted: #5B6678; --faint: #8A94A6;
+  --border: #DCE3EE; --border-strong: #C3CDDC; --field-border: #7C8698;
+  --accent: #2563EB; --accent-hover: #1D4ED8; --accent-soft: #E7EEFE;
+  --primary: #0B1220; --primary-hover: #1F2A3D;
+  --success: #0F7A4C; --warning: #A15C00; --warning-soft: #FFF3DB; --danger: #C0362C; --danger-soft: #FDECEA;
+  --font-ui: 'Manrope', system-ui, sans-serif;
+  --font-display: 'Wix Madefor Display', 'Manrope', system-ui, sans-serif;
+  /* Движение: ровное торможение для появлений, разгон-торможение для панелей, пружина для мелких значков (из плейбука). */
+  --ease: cubic-bezier(.33, 1, .68, 1); --ease-io: cubic-bezier(.65, 0, .35, 1); --spring: cubic-bezier(.34, 1.56, .64, 1);
+  font-family: var(--font-ui); color: var(--ink); background: var(--bg);
+}
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -.02em; }
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--accent-hover); }
+input, select { font: inherit; color: inherit; border: 1px solid var(--field-border); border-radius: 8px; padding: 10px 12px; background: var(--surface); }
+input::placeholder { color: var(--muted); opacity: 1; }
+input:hover, select:hover { border-color: var(--muted); }
+input:focus-visible, select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .25); }
+button:disabled { color: var(--faint); background: var(--surface); border-color: var(--border); cursor: default; }
+.auth-form { display: grid; gap: 16px; }
+/* Вход (VIS-11): карточка на фоне с двумя мягкими заливками и зерном; на телефоне карточка без рамки на всю ширину. */
+.auth-page { position: relative; isolation: isolate; display: flex; flex-direction: column; min-height: 100vh; padding: 15vh 16px 0; background: radial-gradient(520px 380px at 18% 22%, rgba(37, 99, 235, .08), transparent 70%), radial-gradient(560px 420px at 82% 78%, rgba(37, 99, 235, .08), transparent 70%), var(--bg); }
+.auth-page::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .06; mix-blend-mode: overlay; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.auth-card { width: 100%; max-width: 400px; margin: 0 auto; padding: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 1px 2px rgba(11, 18, 32, .06); }
+.auth-card .logo { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; font: 800 20px/1 var(--font-display); letter-spacing: -.03em; }
+.auth-card .logo svg { color: var(--accent); }
+.two-tone { margin: 0 0 24px; font-size: 24px; font-weight: 800; line-height: 1.25; letter-spacing: -.03em; }
+.two-tone span { display: block; color: var(--muted); }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; }
+.hint { font-size: 13px; color: var(--muted); }
+.form-error { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--danger-soft); color: var(--danger); font-size: 14px; }
+.or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.link-button { display: block; margin: 20px auto 0; padding: 4px 8px; border: 0; background: none; color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.link-button:hover:not(:disabled) { background: none; color: var(--accent-hover); }
+.auth-form .btn-primary { min-height: 44px; }
+.github-button { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 600; text-decoration: none; }
+.github-button:hover { background: var(--surface-2); color: var(--ink); }
+.github-button svg { flex-shrink: 0; }
+.text-button { background: none; border: 0; }
+.document-list { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
+/* Страница списка на всю высоту: контурный «Cowrite» прижат к низу окна, буквы обрезаны краем (идея с rokii). */
+.list-page { min-height: 100vh; display: flex; flex-direction: column; }
+.list-page .document-list { width: 100%; }
+/* Пустой список (VIS-10): двухтонный заголовок, под ним плитка «Новый документ» — 3D-лист из 3dicons (CC0, перекрашен) и есть кнопка. */
+.empty-hero { margin-top: 8px; }
+.empty-hero h1, .empty-hero p { margin: 0; font: 800 48px/1.08 var(--font-display); letter-spacing: -.035em; }
+.empty-hero p { margin-bottom: 32px; color: var(--muted); }
+.new-tile { display: grid; padding: 0; overflow: hidden; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 1px 2px rgba(11, 18, 32, .06); transition: transform .15s, box-shadow .15s, border-color .15s; }
+.new-tile:hover:not(:disabled) { background: var(--surface); border-color: var(--accent); box-shadow: 0 8px 24px rgba(37, 99, 235, .15); transform: translateY(-2px); }
+.new-tile-art { display: grid; place-items: center; height: 176px; background: radial-gradient(closest-side, rgba(37, 99, 235, .16), transparent 85%), var(--surface-2); }
+.new-tile-art img { filter: drop-shadow(0 16px 14px rgba(30, 58, 138, .22)); }
+.new-tile-label { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-top: 1px solid var(--border); font-size: 15px; font-weight: 600; }
+.new-tile-label svg { width: 16px; height: 16px; }
+@media (prefers-reduced-motion: reduce) { .new-tile { transition: none; } .new-tile:hover:not(:disabled) { transform: none; } }
+/* Ряд из плитки и трёх пунктирных заготовок, бледнеющих вправо: подсказка, что здесь появятся документы. */
+.tile-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.ghost-tile { display: flex; flex-direction: column; gap: 10px; padding: 32px 24px 20px; border: 1.5px dashed var(--border-strong); border-radius: 16px; }
+.ghost-tile i { display: block; height: 10px; width: 80%; border-radius: 5px; background: var(--surface-2); }
+.ghost-tile i:nth-child(2) { width: 95%; }
+.ghost-tile i:nth-child(3) { width: 60%; }
+.ghost-tile i:last-child { width: 50%; height: 12px; margin-top: auto; }
+.ghost-tile:nth-child(3) { opacity: .7; }
+.ghost-tile:nth-child(4) { opacity: .4; }
+@media (max-width: 1000px) { .tile-row { grid-template-columns: repeat(3, 1fr); } .ghost-tile:nth-child(4) { display: none; } }
+.new-document { display: inline-flex; align-items: center; gap: 8px; }
+.new-document svg { width: 16px; height: 16px; }
+.wordmark { width: 100%; max-width: 1100px; margin: auto auto 0; padding: 48px 24px 0; line-height: 0; }
+.wordmark svg { display: block; width: 100%; height: auto; overflow: hidden; }
+.wordmark text { font: 800 250px var(--font-display); }
+/* На входе контур чёрный, как у rokii; в рабочем списке светлый, как водяной знак, чтобы не спорить с документами. */
+.wordmark-color { flood-color: var(--ink); }
+.list-page .wordmark-color { flood-color: var(--border-strong); }
+/* На входе слово всегда полного размера у нижнего края окна, за карточкой: прокрутку не добавляет,
+   а более высокая форма регистрации просто ложится поверх букв. */
+.auth-page .wordmark { position: absolute; left: 0; right: 0; bottom: 0; z-index: -1; margin: 0 auto; padding: 0 24px; }
+.section-header, .document-row { display: flex; align-items: center; gap: 20px; justify-content: space-between; }
+.document-row { padding: 18px 0; border-bottom: 1px solid var(--border); }
+.document-title { flex: 1; text-align: left; font-size: 17px; }
+.document-row time, .document-row span { color: var(--muted); font-size: 13px; }
+.pagination { display: flex; gap: 10px; margin: 12px 0; }
+[role="alert"] { color: var(--danger); }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, a { -webkit-tap-highlight-color: transparent; }
+/* Вторичная кнопка по умолчанию; основная, тихая и опасная задаются классами. */
+button { font: inherit; font-size: 14px; font-weight: 500; line-height: 18px; cursor: pointer; padding: 8px 14px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--ink); }
+button:hover:not(:disabled) { background: var(--surface-2); }
+.btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+.btn-ghost, .btn-ghost:disabled { background: transparent; border-color: transparent; }
+.btn-danger { background: transparent; border-color: transparent; color: var(--danger); }
+.btn-danger:hover:not(:disabled) { background: var(--danger-soft); }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.icon-button { width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-color: transparent; background: transparent; }
+/* Шапка редактора (VIS-2): «‹», название со статусом, действия справа. */
+.doc-header { position: sticky; top: 0; z-index: 5; min-height: 56px; display: flex; align-items: center; gap: 8px; padding: 0 16px 0 12px; background: var(--surface); box-shadow: 0 1px 0 rgba(11, 18, 32, .08); }
+.doc-title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
+.title-input { width: 420px; max-width: 100%; padding: 6px 8px; border-color: transparent; background: transparent; font-weight: 600; text-overflow: ellipsis; }
+@supports (field-sizing: content) { .title-input { width: auto; max-width: 420px; min-width: 8ch; field-sizing: content; } }
+.title-input:hover { border-color: var(--border-strong); }
+.title-text { margin: 0; padding: 6px 8px; max-width: 420px; font: 600 16px/1.3 var(--font-ui); letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.doc-actions { display: flex; align-items: center; gap: 4px; }
+.doc-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.doc-actions .btn-primary { margin-left: 8px; }
+.doc-actions button.on, .doc-actions button.on:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent-hover); }
+.doc-actions .narrow-only { display: none; }
+/* На телефоне «История» и «PDF» в меню «Ещё». Popover сам закрывается по Esc и клику мимо, не задаём ему display до открытия. */
+.menu { inset: 52px 8px auto auto; margin: 0; padding: 6px; width: 200px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--ink); box-shadow: 0 8px 24px rgba(11, 18, 32, .12); }
+.menu:popover-open { display: grid; }
+.menu button { width: 100%; min-height: 44px; justify-content: flex-start; border-color: transparent; background: transparent; font-size: 15px; }
+/* История версий справа (VIS-5, VIS-7): от 1200 px колонкой рядом с бумагой, уже — поверх документа, на телефоне нижним листом. */
+/* Колонка панели раздвигается плавно: лист отъезжает влево, панель шириной 360 выезжает из-за правого края (clip прячет хвост). */
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 0px; align-items: start; overflow-x: clip; transition: grid-template-columns .45s var(--ease-io); }
+.workspace.with-side { grid-template-columns: minmax(0, 1fr) 360px; }
+.workspace.leaving { grid-template-columns: minmax(0, 1fr) 0px; }
+.workspace-main { min-width: 0; }
+.side-panel { position: sticky; top: 56px; width: 360px; height: calc(100vh - 56px); overflow-y: auto; background: var(--surface); border-left: 1px solid var(--border); }
+.side-head { display: flex; align-items: center; gap: 4px; padding: 16px 12px 12px 24px; }
+.side-head h2 { flex: 1; margin: 0; font-size: 20px; }
+.side-body { padding: 0 24px 24px; }
+.scrim { display: none; }
+.page-note { margin: 0; padding: 8px 16px; font-size: 14px; }
+.pdf-progress { display: none; }
+.side-subhead { margin: 16px 0 4px; font: 600 13px/1.4 var(--font-ui); letter-spacing: 0; color: var(--muted); }
+.share-form { display: grid; gap: 8px; }
+.share-form > div { display: flex; gap: 8px; }
+.share-form > div .btn-primary { flex: 1; }
+.side-note { margin: 8px 0 0; font-size: 14px; }
+.member { display: flex; align-items: center; gap: 8px; min-height: 52px; }
+.member > div { flex: 1; min-width: 0; }
+.member b, .member small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.member b { font-weight: 600; }
+.member small, .member-role { font-size: 13px; color: var(--muted); }
+.version { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 52px; margin: 0 -8px; padding: 6px 8px; border-radius: 8px; }
+.version:hover, .version:focus-within { background: var(--surface-2); }
+.version time { display: block; font-weight: 600; }
+.version span { display: block; font-size: 13px; color: var(--muted); }
+/* «Восстановить» появляется при наведении и фокусе; прозрачность, а не visibility: кнопка остаётся доступной клавиатуре и скринридеру. */
+.version .restore { opacity: 0; }
+.version:hover .restore, .version:focus-within .restore { opacity: 1; }
+@media (hover: none) { .version .restore { opacity: 1; } }
+@media (max-width: 1199px) {
+  .workspace.with-side { display: block; }
+  .scrim { display: block; position: fixed; inset: 0; z-index: 10; background: rgba(11, 18, 32, .2); }
+  .side-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 11; width: 360px; height: auto; box-shadow: 0 8px 24px rgba(11, 18, 32, .12); }
+}
+/* Шапка списка (VIS-19): слева значок приложения, справа кружок с буквой, имя аккаунта и «Выйти». */
+.list-header { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px 0 24px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.app-icon { margin-right: auto; }
+.account { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.avatar { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-hover); font-size: 13px; font-weight: 700; }
+.save-status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.save-status svg { width: 16px; height: 16px; }
+.save-status.offline svg { color: var(--warning); }
+.save-status.error { color: var(--danger); }
+.notice { padding: 12px 24px; background: var(--warning-soft); color: var(--warning); font-size: 14px; }
+/* Панель форматирования — «чёлка» под шапкой, как вырез iPhone: язычок по центру листа, нижние углы скруглены, у шапки углы вогнутые. */
+.toolbar { position: sticky; top: 56px; z-index: 6; display: flex; justify-content: center; pointer-events: none; }
+.notch { position: relative; display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 16px; pointer-events: auto; background: var(--surface); border-radius: 0 0 16px 16px; filter: drop-shadow(0 1px 0 rgba(11, 18, 32, .1)); }
+.notch::before, .notch::after { content: ""; position: absolute; top: 0; width: 16px; height: 16px; }
+.notch::before { right: 100%; background: radial-gradient(circle at 0 100%, transparent 15.5px, var(--surface) 16px); }
+.notch::after { left: 100%; background: radial-gradient(circle at 100% 100%, transparent 15.5px, var(--surface) 16px); }
+.toolbar select { height: 32px; padding: 4px 8px; border-color: transparent; background: var(--surface-2); font-size: 14px; }
+.toolbar .icon-button { width: 32px; height: 32px; font-size: 15px; }
+.toolbar .icon-button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-hover); }
+.toolbar-gap { width: 12px; flex-shrink: 0; }
+/* Лист и текст документа (VIS-16): 24 px от панели, поля 72/80, заголовки 32/24/20, пункты списка без абзацных отступов. */
+.paper { max-width: 850px; min-height: 900px; margin: 24px auto 40px; border-radius: 4px; background: var(--surface); box-shadow: 0 1px 3px rgba(11, 18, 32, .08), 0 0 0 1px rgba(11, 18, 32, .04); }
+.document-editor { min-height: 900px; padding: 72px 80px; outline: none; line-height: 1.7; overflow-wrap: anywhere; }
+.document-editor > :first-child { margin-top: 0; }
+.document-editor p { margin: 0 0 12px; }
+.document-editor h1 { margin: 28px 0 12px; font-size: 32px; line-height: 1.2; }
+.document-editor h2 { margin: 24px 0 8px; font-size: 24px; line-height: 1.25; }
+.document-editor h3 { margin: 20px 0 8px; font-size: 20px; line-height: 1.3; }
+.document-editor ul, .document-editor ol { margin: 0 0 12px; padding-left: 24px; }
+.document-editor li { margin: 4px 0; }
+.document-editor li > p { margin: 0; }
+.document-editor p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; height: 0; color: var(--muted); pointer-events: none; }
+.collaboration-carets__caret { border-left: 1px solid; border-right: 1px solid; margin-left: -1px; margin-right: -1px; pointer-events: none; position: relative; word-break: normal; }
+.collaboration-carets__label { border-radius: 3px 3px 3px 0; color: white; font-size: 12px; font-weight: 600; left: -1px; line-height: normal; padding: 2px 5px; position: absolute; top: -1.5em; user-select: none; white-space: nowrap; }
+.auth-state { max-width: 680px; margin: 15vh auto; padding: 48px 32px; text-align: center; }
+.auth-state h1 { font-size: 24px; margin: 0 0 16px; }
+@media (max-width: 700px) { .list-header { padding: 0 4px 0 16px; } .account-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } .paper { margin: 0; border-radius: 0; box-shadow: none; min-height: 0; } .document-editor { padding: 24px 16px; min-height: calc(100vh - 104px); } .auth-state { margin: 30px 12px; } .empty-hero h1, .empty-hero p { font-size: 34px; } .tile-row { grid-template-columns: 1fr; } .ghost-tile { display: none; } .auth-page { padding: 0; background: var(--surface); } .auth-page::before { display: none; } .auth-card { max-width: none; padding: 32px 16px 8px; border: 0; border-radius: 0; box-shadow: none; } }
+@media (max-width: 700px) {
+  .doc-header { padding: 0 4px; gap: 2px; }
+  /* Чёлка с вогнутыми углами помещается и в 360 px: без промежутков между группами, кнопки 38 px. */
+  .notch { height: 48px; padding: 0 8px; }
+  .toolbar .icon-button { width: 38px; height: 38px; }
+  .toolbar select { padding: 4px 6px; }
+  .toolbar-gap { width: 0; }
+  .doc-title { flex-direction: column; align-items: stretch; gap: 0; }
+  .title-input, .title-text { width: 100%; max-width: 100%; padding: 1px 4px; font-size: 15px; field-sizing: fixed; }
+  .doc-title .save-status { padding: 0 5px; font-size: 12px; gap: 5px; }
+  .doc-title .save-status svg { width: 14px; height: 14px; }
+  .icon-button { width: 40px; height: 40px; }
+  .doc-actions .wide-only { display: none; }
+  .doc-actions .narrow-only { display: inline-flex; }
+  .doc-actions .share, .doc-actions .share:hover:not(:disabled) { width: 40px; height: 40px; margin: 0; padding: 0; border-color: transparent; background: transparent; color: var(--ink); }
+  .doc-actions .share .label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .pdf-progress { display: block; background: var(--accent-soft); color: var(--accent-hover); }
+  .side-panel { top: auto; left: 0; width: auto; height: 85vh; border-left: 0; border-radius: 16px 16px 0 0; }
+  .side-panel::before { content: ""; display: block; width: 36px; height: 4px; margin: 8px auto 0; border-radius: 2px; background: var(--border-strong); }
+  .side-head { padding: 8px 8px 8px 16px; }
+  .side-body { padding: 0 16px 16px; }
+}
+
+/* ===== Движение: отклик на действия и плавное появление. При «уменьшить движение» в системе всё мгновенно (внизу). ===== */
+@keyframes fade { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+/* Карточки поднимаются из размытия, контурное слово выезжает снизу из-за края (приёмы из плейбука). */
+@keyframes rise-blur { from { opacity: 0; transform: translateY(32px) scale(.96); filter: blur(12px); } }
+@keyframes word-up { from { transform: translateY(45%); } }
+@keyframes pop { from { opacity: 0; transform: scale(.5); } }
+@keyframes island { from { opacity: 0; transform: scale(.6, .2); } }
+@keyframes pulse { 50% { opacity: .4; } }
+@keyframes bob { 50% { transform: translateY(3px); } }
+@keyframes sweep { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+@keyframes shake { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+@keyframes panel-in { from { opacity: 0; transform: var(--panel-from); } }
+@keyframes panel-out { to { opacity: 0; transform: var(--panel-from); } }
+
+/* Отклик: цвета меняются плавно, нажатая кнопка чуть проседает. */
+button, .github-button, .link-button, input, select { transition: background-color .2s, border-color .2s, color .2s, box-shadow .2s, transform .15s var(--ease); }
+button:active:not(:disabled), .github-button:active { transform: scale(.96); }
+.icon-button:active:not(:disabled) { transform: scale(.88); }
+.new-tile:active:not(:disabled) { transform: scale(.98); }
+.document-title:hover { color: var(--accent); }
+.version, .version .restore { transition: background-color .2s, opacity .2s; }
+
+/* Вход: карточка из размытия, слово снизу, поле «Имя» и подсказка при переходе к регистрации, ошибка встряхивает плашку. */
+.wordmark { overflow: hidden; }
+.wordmark svg { animation: word-up 1.1s var(--ease) .2s backwards; }
+.auth-card { animation: rise-blur .8s var(--ease) backwards; }
+.auth-form .field, .auth-form .hint { animation: rise .45s var(--ease) backwards; }
+.form-error { animation: shake .5s var(--ease); }
+.auth-state[role="status"] { animation: fade .3s .2s backwards; }
+
+/* Список: заголовок, затем строки сверху вниз; в пустом списке плитки по очереди. */
+.section-header, .empty-hero h1 { animation: rise .6s var(--ease) backwards; }
+.empty-hero p { animation: rise .6s var(--ease) .1s backwards; }
+.document-row { animation: rise .55s var(--ease) backwards; animation-delay: calc(120ms + var(--i, 0) * 70ms); }
+.tile-row > * { animation: rise-blur .8s var(--ease) .15s backwards; }
+.tile-row > :nth-child(2) { animation-delay: .27s; }
+.tile-row > :nth-child(3) { animation-delay: .39s; }
+.tile-row > :nth-child(4) { animation-delay: .51s; }
+.account { animation: fade .4s backwards; }
+.avatar { animation: pop .55s var(--spring) backwards; }
+
+/* Редактор: лист поднимается, чёлка раскрывается из-под шапки, как вырез iPhone. */
+.paper { animation: rise .7s var(--ease) backwards; }
+.notch { transform-origin: top center; animation: island .7s var(--spring) .2s backwards; }
+.page-note, .side-note { animation: rise .4s var(--ease) backwards; }
+/* Статус: новое облачко появляется пружинкой; пока сохраняем или подключаемся, оно мягко пульсирует. */
+.save-icon { display: inline-flex; animation: pop .5s var(--spring); }
+.save-status.syncing .save-icon, .save-status.unsaved .save-icon, .save-status.connecting .save-icon { animation: pop .5s var(--spring), pulse 1.2s ease-in-out .5s infinite; }
+/* Пока готовится PDF, по кнопке бежит световая полоса, а стрелка покачивается. */
+button[aria-busy="true"]:disabled { background: linear-gradient(90deg, transparent 30%, var(--accent-soft) 50%, transparent 70%) 0 0 / 200% 100%; animation: sweep 1.2s linear infinite; }
+button[aria-busy="true"] svg { animation: bob 1s ease-in-out infinite; }
+
+/* Боковая панель въезжает и уезжает: справа рядом с листом, поверх документа — с края окна, на телефоне — снизу. */
+/* Рядом с листом сдвиг даёт сама колонка, панель только проявляется; поверх документа и на телефоне — выезжает сама. */
+.side-panel { --panel-from: none; animation: panel-in .45s var(--ease-io) backwards; }
+.leaving .side-panel { animation: panel-out .4s var(--ease-io) both; }
+.scrim { animation: fade .3s backwards; }
+.leaving .scrim { animation: fade-out .4s both; }
+.member, .version { animation: rise .5s var(--ease) backwards; animation-delay: calc(200ms + var(--i, 0) * 60ms); }
+@media (max-width: 1199px) { .side-panel { --panel-from: translateX(100%); } }
+@media (max-width: 700px) { .side-panel { --panel-from: translateY(100%); } }
+
+/* Меню «Ещё» раскрывается из угла кнопки и так же сворачивается. */
+.menu { opacity: 0; transform: scale(.95) translateY(-4px); transform-origin: top right; transition: opacity .22s, transform .22s var(--ease), overlay .22s allow-discrete, display .22s allow-discrete; }
+.menu:popover-open { opacity: 1; transform: none; }
+@starting-style { .menu:popover-open { opacity: 0; transform: scale(.95) translateY(-4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: 1ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+}
