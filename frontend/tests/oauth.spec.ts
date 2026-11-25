@@ -23,6 +23,7 @@ test('OAuth callback exchanges the code without persisting the token', async ({ 
     expect(route.request().postDataJSON()).toEqual({ code: 'test-exchange-code' })
     await route.fulfill({ json: { access_token: 'test-token', token_type: 'bearer', expires_in: 1800 } })
   })
+  await page.route('**/api/users/me', (route) => route.fulfill({ json: { id: 'test-user', email: 'test@example.com', display_name: 'Тест' } }))
   await page.route('**/api/documents?*', (route) => route.fulfill({ json: [] }))
   await page.goto('/auth/callback#code=test-exchange-code')
   await expect(page).toHaveURL(/\/$/)
