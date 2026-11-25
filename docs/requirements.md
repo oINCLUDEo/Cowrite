@@ -29,17 +29,3 @@
 | Руководство пользователя | [user-guide.md](user-guide.md) | ручная проверка пути в браузере |
 | Code review через PR | Защита `main` и `develop`: 1 approve + зелёный CI | [development.md](development.md) |
 
-## Как проверять вручную
-
-Автотесты покрывают логику. Полный путь по интерфейсу проходится руками —
-шаги и ожидаемый результат в [user-guide.md](user-guide.md).
-
-- **GitHub OAuth.** Поток проверен автотестами на контракт (state, cookie,
-  одноразовый код) с подменой ответов GitHub. Живая проверка: создать OAuth
-  App, задать `GITHUB_REDIRECT_URI`, пройти вход в браузере — см. README.
-- **Поставка.** `release.yml` и `infra/deploy.sh` проверены job-ом
-  `Docker build` (валидность Compose-конфига и сборка обоих образов).
-  Публикация в GHCR и SSH-деплой выполняются при первом релизе на реальном
-  сервере — порядок в [deployment.md](deployment.md).
-- **Защита веток.** Настраивается в интерфейсе GitHub, в репозитории не
-  хранится. Порядок — в [development.md](development.md).
