@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { api, type DocumentMeta } from './api'
 import { PlusIcon } from './icons'
 import { formatDateTime, roleLabels } from './labels'
@@ -49,7 +49,8 @@ export function Documents({ open }: { open: (id: string) => void }) {
   return <main className="document-list">
     <div className="section-header"><h1>Документы</h1>{newButton}</div>
     {error && <p role="alert">{error}</p>}
-    {documents.map((doc) => <article className="document-row" key={doc.id}>
+    {/* --i задаёт задержку появления строки: список проявляется сверху вниз. */}
+    {documents.map((doc, index) => <article className="document-row" key={doc.id} style={{ '--i': Math.min(index, 12) } as CSSProperties}>
       <button className="text-button document-title" onClick={() => open(doc.id)}>{doc.title}</button>
       <span>{roleLabels[doc.role]}</span>
       <time dateTime={doc.updated_at}>{formatDateTime(doc.updated_at)}</time>

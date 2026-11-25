@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { api, type DocumentMeta, type Member, type Version } from './api'
 import { BookmarkPlusIcon, CloseIcon } from './icons'
 import { formatDay, formatTime, roleLabels, versionKindLabels } from './labels'
@@ -42,7 +42,8 @@ export function Share({ doc, onClose }: { doc: DocumentMeta; onClose: () => void
     </form>
     {notice && <p className="side-note" role="status">{notice}</p>}{error && <p className="side-note" role="alert">{error}</p>}
     {members.length > 0 && <h3 className="side-subhead">Участники</h3>}
-    {members.map((member) => <div className="member" key={member.user_id}>
+    {/* --i: строки появляются друг за другом после въезда панели. */}
+    {members.map((member, index) => <div className="member" key={member.user_id} style={{ '--i': Math.min(index, 12) } as CSSProperties}>
       <div><b>{member.display_name}</b><small>{member.email}</small></div>
       <span className="member-role">{roleLabels[member.role]}</span>
       <button onClick={() => { void api(`/documents/${doc.id}/members/${member.user_id}`, { method: 'DELETE' }).then(refresh).catch((reason: Error) => setError(reason.message)) }} className="btn-danger" aria-label={`Убрать ${member.email}`}>Убрать</button>
@@ -73,7 +74,7 @@ export function History({ doc, onRestore, onClose }: { doc: DocumentMeta; onRest
       const time = formatTime(version.created_at)
       return <Fragment key={version.id}>
         {(index === 0 || day !== formatDay(versions[index - 1].created_at)) && <h3 className="side-subhead">{day}</h3>}
-        <div className="version" title={`Ревизия ${version.source_revision}`}>
+        <div className="version" title={`Ревизия ${version.source_revision}`} style={{ '--i': Math.min(index, 12) } as CSSProperties}>
           <div><time dateTime={version.created_at}>{time}</time><span>{versionKindLabels[version.kind]}</span></div>
           {doc.role !== 'viewer' && <button className="btn-ghost restore" onClick={() => restore(version)} aria-label={`Восстановить версию от ${time}`}>Восстановить</button>}
         </div>
