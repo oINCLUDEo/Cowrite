@@ -51,7 +51,7 @@ sequenceDiagram
   A->>API: POST restore
   Note over API: Блокировка документа, editor/owner
   API->>PG: Снапшот до отката + выбранное состояние
-  API->>PG: generation + 1, revision + 1; commit
+  API->>PG: generation + 1, revision + 1, commit
   API-->>A: Закрытие 4409
   A->>API: GET метаданных
   Note over A: Уничтожение старого Y.Doc
