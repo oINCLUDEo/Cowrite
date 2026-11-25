@@ -8,6 +8,8 @@
   --success: #0F7A4C; --warning: #A15C00; --warning-soft: #FFF3DB; --danger: #C0362C; --danger-soft: #FDECEA;
   --font-ui: 'Manrope', system-ui, sans-serif;
   --font-display: 'Wix Madefor Display', 'Manrope', system-ui, sans-serif;
+  /* Движение: мягкое торможение для переходов, пружина с лёгким перелётом для мелких значков (из плейбука). */
+  --ease: cubic-bezier(.2, .8, .2, 1); --spring: cubic-bezier(.34, 1.56, .64, 1);
   font-family: var(--font-ui); color: var(--ink); background: var(--bg);
 }
 h1, h2, h3 { font-family: var(--font-display); letter-spacing: -.02em; }
@@ -202,4 +204,73 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
   .side-panel::before { content: ""; display: block; width: 36px; height: 4px; margin: 8px auto 0; border-radius: 2px; background: var(--border-strong); }
   .side-head { padding: 8px 8px 8px 16px; }
   .side-body { padding: 0 16px 16px; }
+}
+
+/* ===== Движение: отклик на действия и плавное появление. При «уменьшить движение» в системе всё мгновенно (внизу). ===== */
+@keyframes fade { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+/* Карточки поднимаются из размытия, контурное слово выезжает снизу из-за края (приёмы из плейбука). */
+@keyframes rise-blur { from { opacity: 0; transform: translateY(16px) scale(.97); filter: blur(10px); } }
+@keyframes word-up { from { transform: translateY(45%); } }
+@keyframes pop { from { opacity: 0; transform: scale(.5); } }
+@keyframes island { from { opacity: 0; transform: scale(.85, .3); } }
+@keyframes pulse { 50% { opacity: .4; } }
+@keyframes bob { 50% { transform: translateY(2px); } }
+@keyframes shake { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+@keyframes panel-in { from { opacity: 0; transform: var(--panel-from); } }
+@keyframes panel-out { to { opacity: 0; transform: var(--panel-from); } }
+
+/* Отклик: цвета меняются плавно, нажатая кнопка чуть проседает. */
+button, .github-button, .link-button, input, select { transition: background-color .15s, border-color .15s, color .15s, box-shadow .15s, transform .12s var(--ease); }
+button:active:not(:disabled), .github-button:active { transform: scale(.97); }
+.icon-button:active:not(:disabled) { transform: scale(.9); }
+.new-tile:active:not(:disabled) { transform: scale(.98); }
+.document-title:hover { color: var(--accent); }
+.version, .version .restore { transition: background-color .15s, opacity .15s; }
+
+/* Вход: карточка из размытия, слово снизу, поле «Имя» и подсказка при переходе к регистрации, ошибка встряхивает плашку. */
+.wordmark { overflow: hidden; }
+.wordmark svg { animation: word-up .9s var(--ease) .15s backwards; }
+.auth-card { animation: rise-blur .5s var(--ease) backwards; }
+.auth-form .field, .auth-form .hint { animation: rise .3s var(--ease) backwards; }
+.form-error { animation: shake .4s var(--ease); }
+.auth-state[role="status"] { animation: fade .3s .2s backwards; }
+
+/* Список: заголовок, затем строки сверху вниз; в пустом списке плитки по очереди. */
+.section-header, .empty-hero h1 { animation: rise .4s var(--ease) backwards; }
+.empty-hero p { animation: rise .4s var(--ease) .06s backwards; }
+.document-row { animation: rise .35s var(--ease) backwards; animation-delay: calc(60ms + var(--i, 0) * 35ms); }
+.tile-row > * { animation: rise-blur .5s var(--ease) .12s backwards; }
+.tile-row > :nth-child(2) { animation-delay: .2s; }
+.tile-row > :nth-child(3) { animation-delay: .28s; }
+.tile-row > :nth-child(4) { animation-delay: .36s; }
+.account { animation: fade .3s backwards; }
+.avatar { animation: pop .4s var(--spring) backwards; }
+
+/* Редактор: лист поднимается, чёлка раскрывается из-под шапки, как вырез iPhone. */
+.paper { animation: rise .45s var(--ease) backwards; }
+.notch { transform-origin: top center; animation: island .5s var(--spring) .1s backwards; }
+.page-note, .side-note { animation: rise .25s var(--ease) backwards; }
+/* Статус: новое облачко появляется пружинкой; пока сохраняем или подключаемся, оно мягко пульсирует. */
+.save-icon { display: inline-flex; animation: pop .35s var(--spring); }
+.save-status.syncing .save-icon, .save-status.unsaved .save-icon, .save-status.connecting .save-icon { animation: pop .35s var(--spring), pulse 1.2s ease-in-out .35s infinite; }
+button[aria-busy="true"] svg { animation: bob 1s ease-in-out infinite; }
+
+/* Боковая панель въезжает и уезжает: справа рядом с листом, поверх документа — с края окна, на телефоне — снизу. */
+.side-panel { --panel-from: translateX(16px); animation: panel-in .24s var(--ease) backwards; }
+.leaving .side-panel { animation: panel-out .2s var(--ease) both; }
+.scrim { animation: fade .2s backwards; }
+.leaving .scrim { animation: fade-out .2s both; }
+.member, .version { animation: rise .3s var(--ease) backwards; }
+@media (max-width: 1199px) { .side-panel { --panel-from: translateX(100%); } }
+@media (max-width: 700px) { .side-panel { --panel-from: translateY(100%); } }
+
+/* Меню «Ещё» раскрывается из угла кнопки и так же сворачивается. */
+.menu { opacity: 0; transform: scale(.95) translateY(-4px); transform-origin: top right; transition: opacity .15s, transform .15s var(--ease), overlay .15s allow-discrete, display .15s allow-discrete; }
+.menu:popover-open { opacity: 1; transform: none; }
+@starting-style { .menu:popover-open { opacity: 0; transform: scale(.95) translateY(-4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: 1ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
 }

@@ -24,6 +24,8 @@ export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; rel
   const collab = useCollabSession(metadata)
   const { session, status, saved, role, error, setError } = collab
   const [panel, setPanel] = useState<Panel>(null)
+  // Панель закрывается анимацией: сначала уезжает (класс leaving), по окончании убирается из разметки.
+  const [leaving, setLeaving] = useState(false)
   const [title, setTitle] = useState(metadata.title)
   // Файл называется так, как документ назван на экране сейчас.
   const pdf = usePdfExport(documentId, title)
@@ -54,17 +56,23 @@ export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; rel
   useCollabConnection(collab, metadata, reload)
   // «Доступ» видит только владелец: если роль сменилась, панель не показывается, как и раньше.
   const side = panel === 'history' || (panel === 'share' && role === 'owner')
-  const close = () => setPanel(null)
+  const close = () => setLeaving(true)
+  const toggle = (next: Exclude<Panel, null>) => {
+    if (panel === next && !leaving) close()
+    else { setLeaving(false); setPanel(next) }
+  }
 
   return (
     <>
-      <EditorHeader back={back} documentId={documentId} metadata={metadata} title={title} setTitle={setTitle} role={role} setError={setError} status={status} saved={saved} panel={panel} setPanel={setPanel} exporting={pdf.busy} onExport={() => { void pdf.start() }} />
+      <EditorHeader back={back} documentId={documentId} metadata={metadata} title={title} setTitle={setTitle} role={role} setError={setError} status={status} saved={saved} panel={leaving ? null : panel} toggle={toggle} exporting={pdf.busy} onExport={() => { void pdf.start() }} />
       {error && <p role="alert">{error}</p>}
       {/* На широком экране ход экспорта виден на самой кнопке, на телефоне — этой строкой: кнопка спрятана в меню. */}
       {pdf.busy && <p className="page-note pdf-progress" role="status">Готовим PDF…</p>}
       {pdf.error && <p className="page-note" role="alert">{pdf.error}</p>}
       {/* Обёртка есть всегда: при открытии боковой панели редактор не пересоздаётся, а встаёт левее неё. */}
-      <div className={side ? 'workspace with-side' : 'workspace'}>
+      <div className={`${side ? 'workspace with-side' : 'workspace'}${leaving ? ' leaving' : ''}`} onAnimationEnd={(event) => {
+        if (event.animationName === 'panel-out') { setPanel(null); setLeaving(false) }
+      }}>
         <div className="workspace-main">
           {role !== 'viewer' && <EditorToolbar editor={editor} />}
           <main className="paper"><EditorContent editor={editor} /></main>
@@ -82,18 +90,17 @@ export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; rel
 
 type HeaderProps = {
   back: () => void; documentId: string; metadata: DocumentMeta; title: string; setTitle: (title: string) => void
-  role: Role; setError: (error: string) => void; status: ConnectionStatus; saved: SaveState; panel: Panel; setPanel: (panel: Panel) => void
+  role: Role; setError: (error: string) => void; status: ConnectionStatus; saved: SaveState; panel: Panel; toggle: (panel: Exclude<Panel, null>) => void
   exporting: boolean; onExport: () => void
 }
 
 // Шапка и панель объявлены на уровне модуля: внутри Editor они пересоздавались бы на каждом рендере,
 // и поле названия теряло бы фокус после каждой буквы.
-function EditorHeader({ back, documentId, metadata, title, setTitle, role, setError, status, saved, panel, setPanel, exporting, onExport }: HeaderProps) {
+function EditorHeader({ back, documentId, metadata, title, setTitle, role, setError, status, saved, panel, toggle, exporting, onExport }: HeaderProps) {
   const pdfLabel = exporting ? 'Готовим PDF…' : 'PDF'
   // Без CRDT-соединения сохранение невозможно, иначе показываем последнее состояние из /status.
   const state: SaveState = status === 'connected' ? saved : status === 'connecting' ? 'connecting' : 'offline'
   const [stateText, stateHint] = saveStateLabels[state]
-  const toggle = (next: Exclude<Panel, null>) => setPanel(panel === next ? null : next)
   const pressed = (name: Panel) => (panel === name ? ' on' : '')
   return (
     <header className="doc-header">
@@ -104,7 +111,10 @@ function EditorHeader({ back, documentId, metadata, title, setTitle, role, setEr
             if (title !== metadata.title) void api<DocumentMeta>(`/documents/${documentId}`, { method: 'PATCH', body: JSON.stringify({ title }) }).catch((reason: Error) => setError(reason.message))
           }} />
           : <h1 className="title-text">{title}</h1>}
-        <span className={`save-status ${state}`} role="status" title={stateHint}>{saveStateIcons[state]}{stateText}</span>
+        <span className={`save-status ${state}`} role="status" title={stateHint}>
+          {/* key: при смене состояния иконка монтируется заново и появляется с пружинкой. */}
+          <span key={state} className="save-icon">{saveStateIcons[state]}</span>{stateText}
+        </span>
       </div>
       <div className="doc-actions">
         <button className={`btn-ghost wide-only${pressed('history')}`} aria-expanded={panel === 'history'} onClick={() => toggle('history')}><HistoryIcon />История</button>
