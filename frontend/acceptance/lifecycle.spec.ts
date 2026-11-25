@@ -24,7 +24,7 @@ test('Mailpit, queued export, worker redelivery and API persistence', async ({ b
     const editor = page.getByRole('textbox', { name: 'Содержимое документа' })
     await editor.fill('Подтверждённое состояние после перезапуска')
     await expect(page.getByRole('status')).toHaveText('Сохранено')
-    await page.getByRole('button', { name: 'Доступ', exact: true }).click()
+    await page.getByRole('button', { name: 'Поделиться', exact: true }).click()
     await page.getByRole('textbox', { name: 'Email участника' }).fill(invited.email)
     await page.getByRole('button', { name: 'Предоставить доступ' }).click()
     await expect(page.getByText(invited.email, { exact: true })).toBeVisible()
@@ -37,9 +37,8 @@ test('Mailpit, queued export, worker redelivery and API persistence', async ({ b
 
     compose('stop', 'worker')
     workerStopped = true
-    await page.getByRole('button', { name: 'PDF', exact: true }).click()
     const accepted = page.waitForResponse((response) => response.request().method() === 'POST' && response.url().endsWith('/export'))
-    await page.getByRole('button', { name: 'Создать PDF' }).click()
+    await page.getByRole('button', { name: 'PDF', exact: true }).click()
     const response = await accepted
     expect(response.status()).toBe(202)
     const { task_id: jobId } = await response.json() as { task_id: string }
@@ -47,9 +46,11 @@ test('Mailpit, queued export, worker redelivery and API persistence', async ({ b
     const jobUrl = `/api/exports/${jobId}`
     const queued = await request.get(jobUrl, { headers: { authorization } })
     expect((await queued.json()).status).toBe('queued')
+    // Пока воркер стоит, задание в очереди; после запуска интерфейс сам скачает готовый файл.
+    const download = page.waitForEvent('download', { timeout: 45000 })
     compose('start', 'worker')
     workerStopped = false
-    await expect(page.getByRole('button', { name: 'Скачать PDF' })).toBeVisible({ timeout: 45000 })
+    expect((await download).suggestedFilename()).toMatch(/\.pdf$/)
     const original = await request.get(`${jobUrl}/file`, { headers: { authorization } })
     expect(original.headers()['content-type']).toContain('application/pdf')
     const bytes = await original.body()

@@ -13,6 +13,7 @@ test('successful registration stays in login mode when automatic login is rate l
       ? route.fulfill({ status: 429, headers: { 'Retry-After': '1' }, json: { detail: { code: 'rate_limited', message: 'Слишком много запросов' } } })
       : route.fulfill({ json: { access_token: 'test-token', token_type: 'bearer', expires_in: 1800 } })
   })
+  await page.route('**/api/users/me', (route) => route.fulfill({ json: { id: 'test-user', email: 'test@example.com', display_name: 'Тест' } }))
   await page.route('**/api/documents?*', (route) => route.fulfill({ json: [] }))
   await page.goto('/')
   await page.getByRole('button', { name: 'Создать аккаунт' }).click()
