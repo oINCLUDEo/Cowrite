@@ -6,7 +6,7 @@
 | Требование | Где закрыто | Проверка |
 |---|---|---|
 | Модульная архитектура | `backend/app/modules/` — `auth`, `documents`, `collab`, `versions`, `exports`, `notifications`; worker отдельным процессом (`app/worker.py`) | `tests/unit/test_model_metadata.py` |
-| 2–3 внешние интеграции | GitHub OAuth (`modules/auth/oauth_service.py`), SMTP (`modules/notifications/service.py`), PostgreSQL и Redis как зависимости | `tests/api/test_github_oauth.py`, `tests/unit/test_notifications.py` |
+| 2–3 внешние интеграции | GitHub OAuth (`modules/auth/oauth_service.py`), SMTP (`modules/notifications/service.py`) |
 | Очередь, асинхронность | Celery поверх Redis: `cowrite.pdf`, `cowrite.invite`, `cowrite.snapshots`, `cowrite.cleanup` | `tests/unit/test_worker.py`, `tests/integration/test_export_lock.py` |
 | Кэш | Роли `(user, document)` в Redis, TTL 60 с, инвалидация при изменении участников (`core/roles.py`) | `tests/unit/test_roles_middleware.py` |
 | Фоновые задачи | Beat: снапшоты каждые 300 с, очистка экспортов каждые 3600 с | `app/worker.py`, `tests/api/test_versions_exports.py` |
