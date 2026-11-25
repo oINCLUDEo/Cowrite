@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { api, type TokenResponse, type User } from './api'
-import { AlertIcon, LogoMark } from './icons'
+import { AlertIcon, LogoMark, Wordmark } from './icons'
 import { setAccessToken } from './session'
 
 // Сервер отвечает по-английски; на экране входа показываем по-русски.
@@ -65,5 +65,6 @@ export function Auth({ onComplete }: { onComplete: () => void }) {
       </form>
     </div>
     <button type="button" className="link-button" onClick={() => { setRegister(!register); setError('') }}>{register ? 'Уже есть аккаунт' : 'Создать аккаунт'}</button>
+    <Wordmark />
   </main>
 }

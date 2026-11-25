@@ -3,6 +3,7 @@ import { OAuthCallback } from './OAuthCallback'
 import { Auth } from './Auth'
 import { Documents } from './Documents'
 import { Editor } from './Editor'
+import { Wordmark } from './icons'
 import { api, type DocumentMeta } from './api'
 import { getAccessToken, logout } from './session'
 
@@ -40,7 +41,11 @@ export function App() {
   }, [authenticated, documentId, epoch])
   if (path === '/auth/callback') return <OAuthCallback onComplete={finishLogin} />
   if (!authenticated) return <Auth onComplete={finishLogin} />
-  if (path === '/') return <><header className="editor-header"><span className="brand">Cowrite</span><button className="btn-ghost" onClick={logout}>Выйти</button></header><Documents open={(id) => navigate(`/documents/${id}`)} /></>
+  if (path === '/') return <div className="list-page">
+    <header className="editor-header"><span className="brand">Cowrite</span><button className="btn-ghost" onClick={logout}>Выйти</button></header>
+    <Documents open={(id) => navigate(`/documents/${id}`)} />
+    <Wordmark />
+  </div>
   if (documentId) {
     if (error) return <main className="auth-state"><p role="alert">{error}</p><button className="btn-primary" onClick={() => navigate('/')}>К документам</button></main>
     if (!metadata) return <main className="auth-state" role="status">Загрузка…</main>

@@ -20,9 +20,9 @@ input:focus-visible, select:focus-visible { outline: none; border-color: var(--a
 button:disabled { color: var(--faint); background: var(--surface); border-color: var(--border); cursor: default; }
 .auth-form { display: grid; gap: 16px; }
 /* Вход (VIS-11): карточка на фоне с двумя мягкими заливками и зерном; на телефоне карточка без рамки на всю ширину. */
-.auth-page { position: relative; isolation: isolate; min-height: 100vh; padding: 15vh 16px 48px; background: radial-gradient(520px 380px at 18% 22%, rgba(37, 99, 235, .08), transparent 70%), radial-gradient(560px 420px at 82% 78%, rgba(37, 99, 235, .08), transparent 70%), var(--bg); }
+.auth-page { position: relative; isolation: isolate; display: flex; flex-direction: column; min-height: 100vh; padding: 15vh 16px 0; background: radial-gradient(520px 380px at 18% 22%, rgba(37, 99, 235, .08), transparent 70%), radial-gradient(560px 420px at 82% 78%, rgba(37, 99, 235, .08), transparent 70%), var(--bg); }
 .auth-page::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .06; mix-blend-mode: overlay; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.auth-card { max-width: 400px; margin: 0 auto; padding: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 1px 2px rgba(11, 18, 32, .06); }
+.auth-card { width: 100%; max-width: 400px; margin: 0 auto; padding: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 1px 2px rgba(11, 18, 32, .06); }
 .auth-card .logo { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; font: 800 20px/1 var(--font-display); letter-spacing: -.03em; }
 .auth-card .logo svg { color: var(--accent); }
 .two-tone { margin: 0 0 24px; font-size: 24px; font-weight: 800; line-height: 1.25; letter-spacing: -.03em; }
@@ -41,6 +41,38 @@ button:disabled { color: var(--faint); background: var(--surface); border-color:
 .github-button svg { flex-shrink: 0; }
 .text-button { background: none; border: 0; }
 .document-list { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
+/* Страница списка на всю высоту: контурный «Cowrite» прижат к низу окна, буквы обрезаны краем (идея с rokii). */
+.list-page { min-height: 100vh; display: flex; flex-direction: column; }
+.list-page .document-list { width: 100%; }
+/* Пустой список (VIS-10): двухтонный заголовок, под ним плитка «Новый документ» — 3D-лист из 3dicons (CC0, перекрашен) и есть кнопка. */
+.empty-hero { margin-top: 8px; }
+.empty-hero h1, .empty-hero p { margin: 0; font: 800 48px/1.08 var(--font-display); letter-spacing: -.035em; }
+.empty-hero p { margin-bottom: 32px; color: var(--muted); }
+.new-tile { display: grid; padding: 0; overflow: hidden; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 1px 2px rgba(11, 18, 32, .06); transition: transform .15s, box-shadow .15s, border-color .15s; }
+.new-tile:hover:not(:disabled) { background: var(--surface); border-color: var(--accent); box-shadow: 0 8px 24px rgba(37, 99, 235, .15); transform: translateY(-2px); }
+.new-tile-art { display: grid; place-items: center; height: 176px; background: radial-gradient(closest-side, rgba(37, 99, 235, .16), transparent 85%), var(--surface-2); }
+.new-tile-art img { filter: drop-shadow(0 16px 14px rgba(30, 58, 138, .22)); }
+.new-tile-label { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-top: 1px solid var(--border); font-size: 15px; font-weight: 600; }
+.new-tile-label svg { width: 16px; height: 16px; }
+@media (prefers-reduced-motion: reduce) { .new-tile { transition: none; } .new-tile:hover:not(:disabled) { transform: none; } }
+/* Ряд из плитки и трёх пунктирных заготовок, бледнеющих вправо: подсказка, что здесь появятся документы. */
+.tile-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.ghost-tile { display: flex; flex-direction: column; gap: 10px; padding: 32px 24px 20px; border: 1.5px dashed var(--border-strong); border-radius: 16px; }
+.ghost-tile i { display: block; height: 10px; width: 80%; border-radius: 5px; background: var(--surface-2); }
+.ghost-tile i:nth-child(2) { width: 95%; }
+.ghost-tile i:nth-child(3) { width: 60%; }
+.ghost-tile i:last-child { width: 50%; height: 12px; margin-top: auto; }
+.ghost-tile:nth-child(3) { opacity: .7; }
+.ghost-tile:nth-child(4) { opacity: .4; }
+@media (max-width: 1000px) { .tile-row { grid-template-columns: repeat(3, 1fr); } .ghost-tile:nth-child(4) { display: none; } }
+.new-document { display: inline-flex; align-items: center; gap: 8px; }
+.new-document svg { width: 16px; height: 16px; }
+.wordmark { width: 100%; max-width: 1100px; margin: auto auto 0; padding: 48px 24px 0; line-height: 0; }
+.wordmark svg { display: block; width: 100%; height: auto; overflow: hidden; }
+.wordmark text { font: 800 250px var(--font-display); }
+/* На входе контур чёрный, как у rokii; в рабочем списке светлый, как водяной знак, чтобы не спорить с документами. */
+.wordmark-color { flood-color: var(--ink); }
+.list-page .wordmark-color { flood-color: var(--border-strong); }
 .section-header, .document-row { display: flex; align-items: center; gap: 20px; justify-content: space-between; }
 .document-row { padding: 18px 0; border-bottom: 1px solid var(--border); }
 .document-title { flex: 1; text-align: left; font-size: 17px; }
@@ -142,7 +174,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .collaboration-carets__label { border-radius: 3px 3px 3px 0; color: white; font-size: 12px; font-weight: 600; left: -1px; line-height: normal; padding: 2px 5px; position: absolute; top: -1.5em; user-select: none; white-space: nowrap; }
 .auth-state { max-width: 680px; margin: 15vh auto; padding: 48px 32px; text-align: center; }
 .auth-state h1 { font-size: 24px; margin: 0 0 16px; }
-@media (max-width: 700px) { .editor-header { padding: 16px; gap: 12px; } .paper { margin: 0; border-radius: 0; box-shadow: none; min-height: 0; } .document-editor { padding: 24px 16px; min-height: calc(100vh - 104px); } .auth-state { margin: 30px 12px; } .auth-page { padding: 0; background: var(--surface); } .auth-page::before { display: none; } .auth-card { max-width: none; padding: 32px 16px 8px; border: 0; border-radius: 0; box-shadow: none; } }
+@media (max-width: 700px) { .editor-header { padding: 16px; gap: 12px; } .paper { margin: 0; border-radius: 0; box-shadow: none; min-height: 0; } .document-editor { padding: 24px 16px; min-height: calc(100vh - 104px); } .auth-state { margin: 30px 12px; } .empty-hero h1, .empty-hero p { font-size: 34px; } .tile-row { grid-template-columns: 1fr; } .ghost-tile { display: none; } .auth-page { padding: 0; background: var(--surface); } .auth-page::before { display: none; } .auth-card { max-width: none; padding: 32px 16px 8px; border: 0; border-radius: 0; box-shadow: none; } }
 @media (max-width: 700px) {
   .doc-header { padding: 0 4px; gap: 2px; }
   /* Чёлка с вогнутыми углами помещается и в 360 px: без промежутков между группами, кнопки 38 px. */
