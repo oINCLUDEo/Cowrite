@@ -114,9 +114,12 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .menu:popover-open { display: grid; }
 .menu button { width: 100%; min-height: 44px; justify-content: flex-start; border-color: transparent; background: transparent; font-size: 15px; }
 /* История версий справа (VIS-5, VIS-7): от 1200 px колонкой рядом с бумагой, уже — поверх документа, на телефоне нижним листом. */
-.workspace.with-side { display: grid; grid-template-columns: minmax(0, 1fr) 360px; align-items: start; }
+/* Колонка панели раздвигается плавно: лист отъезжает влево, панель шириной 360 выезжает из-за правого края (clip прячет хвост). */
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 0px; align-items: start; overflow-x: clip; transition: grid-template-columns .3s var(--ease); }
+.workspace.with-side { grid-template-columns: minmax(0, 1fr) 360px; }
+.workspace.leaving { grid-template-columns: minmax(0, 1fr) 0px; }
 .workspace-main { min-width: 0; }
-.side-panel { position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; background: var(--surface); border-left: 1px solid var(--border); }
+.side-panel { position: sticky; top: 56px; width: 360px; height: calc(100vh - 56px); overflow-y: auto; background: var(--surface); border-left: 1px solid var(--border); }
 .side-head { display: flex; align-items: center; gap: 4px; padding: 16px 12px 12px 24px; }
 .side-head h2 { flex: 1; margin: 0; font-size: 20px; }
 .side-body { padding: 0 24px 24px; }
@@ -216,7 +219,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 @keyframes pop { from { opacity: 0; transform: scale(.5); } }
 @keyframes island { from { opacity: 0; transform: scale(.85, .3); } }
 @keyframes pulse { 50% { opacity: .4; } }
-@keyframes bob { 50% { transform: translateY(2px); } }
+@keyframes bob { 50% { transform: translateY(3px); } }
+@keyframes sweep { from { background-position: 150% 0; } to { background-position: -50% 0; } }
 @keyframes shake { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
 @keyframes panel-in { from { opacity: 0; transform: var(--panel-from); } }
 @keyframes panel-out { to { opacity: 0; transform: var(--panel-from); } }
@@ -255,14 +259,17 @@ button:active:not(:disabled), .github-button:active { transform: scale(.97); }
 /* Статус: новое облачко появляется пружинкой; пока сохраняем или подключаемся, оно мягко пульсирует. */
 .save-icon { display: inline-flex; animation: pop .35s var(--spring); }
 .save-status.syncing .save-icon, .save-status.unsaved .save-icon, .save-status.connecting .save-icon { animation: pop .35s var(--spring), pulse 1.2s ease-in-out .35s infinite; }
+/* Пока готовится PDF, по кнопке бежит световая полоса, а стрелка покачивается. */
+button[aria-busy="true"]:disabled { background: linear-gradient(90deg, transparent 30%, var(--accent-soft) 50%, transparent 70%) 0 0 / 200% 100%; animation: sweep 1.2s linear infinite; }
 button[aria-busy="true"] svg { animation: bob 1s ease-in-out infinite; }
 
 /* Боковая панель въезжает и уезжает: справа рядом с листом, поверх документа — с края окна, на телефоне — снизу. */
-.side-panel { --panel-from: translateX(16px); animation: panel-in .24s var(--ease) backwards; }
-.leaving .side-panel { animation: panel-out .2s var(--ease) both; }
+/* Рядом с листом сдвиг даёт сама колонка, панель только проявляется; поверх документа и на телефоне — выезжает сама. */
+.side-panel { --panel-from: none; animation: panel-in .3s var(--ease) backwards; }
+.leaving .side-panel { animation: panel-out .3s var(--ease) both; }
 .scrim { animation: fade .2s backwards; }
 .leaving .scrim { animation: fade-out .2s both; }
-.member, .version { animation: rise .3s var(--ease) backwards; }
+.member, .version { animation: rise .3s var(--ease) backwards; animation-delay: calc(120ms + var(--i, 0) * 35ms); }
 @media (max-width: 1199px) { .side-panel { --panel-from: translateX(100%); } }
 @media (max-width: 700px) { .side-panel { --panel-from: translateY(100%); } }
 
