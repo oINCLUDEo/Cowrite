@@ -18,7 +18,7 @@ for (const mode of ['login', 'register']) {
   })
 }
 
-test('OAuth callback exchanges the code without persisting the token', async ({ page }) => {
+test('OAuth callback exchanges the code and keeps the token only for this tab', async ({ page }) => {
   await page.route('**/api/auth/exchange', async (route) => {
     expect(route.request().postDataJSON()).toEqual({ code: 'test-exchange-code' })
     await route.fulfill({ json: { access_token: 'test-token', token_type: 'bearer', expires_in: 1800 } })
@@ -28,7 +28,9 @@ test('OAuth callback exchanges the code without persisting the token', async ({ 
   await page.goto('/auth/callback#code=test-exchange-code')
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByRole('heading', { name: 'Документы', exact: true })).toBeVisible()
-  expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0])
+  // Токен переживает F5 в этой вкладке (sessionStorage), но не пишется в localStorage, общий для всех вкладок.
+  expect(await page.evaluate(() => ({ local: localStorage.length, token: sessionStorage.getItem('cowrite:access-token') })))
+    .toEqual({ local: 0, token: 'test-token' })
 })
 
 test('OAuth callback shows a short error without leaking the code', async ({ page }) => {
