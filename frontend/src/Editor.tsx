@@ -1,16 +1,23 @@
-import { useEffect, useState } from 'react'
-import { EditorContent, useEditor } from '@tiptap/react'
+import { useEffect, useState, type MouseEvent, type ReactNode } from 'react'
+import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCaret from '@tiptap/extension-collaboration-caret'
+import { Placeholder } from '@tiptap/extensions'
 import { History, Share } from './Panels'
 import { api, type DocumentMeta, type Role } from './api'
-import { BackIcon, DownloadIcon, HistoryIcon, MoreIcon, ShareIcon } from './icons'
-import { connectionLabels } from './labels'
+import { AlertIcon, BackIcon, BulletListIcon, CloudCheckIcon, CloudIcon, CloudOffIcon, CloudUploadIcon, DownloadIcon, HistoryIcon, MoreIcon, OrderedListIcon, ShareIcon } from './icons'
+import { saveStateLabels, type SaveState } from './labels'
 import { usePdfExport } from './pdf'
 import { useCollabConnection, useCollabSession, type ConnectionStatus } from './useCollab'
 
 type Panel = 'share' | 'history' | null
+
+// Иконка статуса сохранения: облачко по состоянию, как в Google Docs.
+const saveStateIcons: Record<SaveState, ReactNode> = {
+  connecting: <CloudIcon />, syncing: <CloudUploadIcon />, unsaved: <CloudUploadIcon />,
+  saved: <CloudCheckIcon />, offline: <CloudOffIcon />, error: <AlertIcon />,
+}
 
 export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; reload: () => void; back: () => void }) {
   const documentId = metadata.id
@@ -28,6 +35,8 @@ export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; rel
       // Все клиенты редактируют один XML-фрагмент с именем default.
       Collaboration.configure({ document: session.document, field: 'default' }),
       CollaborationCaret.configure({ provider: session.provider, user: session.user }),
+      // Подсказка в пустом документе; читателю не показывается (showOnlyWhenEditable по умолчанию).
+      Placeholder.configure({ placeholder: 'Начните писать' }),
     ],
     editable: role !== 'viewer',
     editorProps: {
@@ -73,7 +82,7 @@ export function Editor({ metadata, reload, back }: { metadata: DocumentMeta; rel
 
 type HeaderProps = {
   back: () => void; documentId: string; metadata: DocumentMeta; title: string; setTitle: (title: string) => void
-  role: Role; setError: (error: string) => void; status: ConnectionStatus; saved: string; panel: Panel; setPanel: (panel: Panel) => void
+  role: Role; setError: (error: string) => void; status: ConnectionStatus; saved: SaveState; panel: Panel; setPanel: (panel: Panel) => void
   exporting: boolean; onExport: () => void
 }
 
@@ -81,6 +90,9 @@ type HeaderProps = {
 // и поле названия теряло бы фокус после каждой буквы.
 function EditorHeader({ back, documentId, metadata, title, setTitle, role, setError, status, saved, panel, setPanel, exporting, onExport }: HeaderProps) {
   const pdfLabel = exporting ? 'Готовим PDF…' : 'PDF'
+  // Без CRDT-соединения сохранение невозможно, иначе показываем последнее состояние из /status.
+  const state: SaveState = status === 'connected' ? saved : status === 'connecting' ? 'connecting' : 'offline'
+  const [stateText, stateHint] = saveStateLabels[state]
   const toggle = (next: Exclude<Panel, null>) => setPanel(panel === next ? null : next)
   const pressed = (name: Panel) => (panel === name ? ' on' : '')
   return (
@@ -92,7 +104,7 @@ function EditorHeader({ back, documentId, metadata, title, setTitle, role, setEr
             if (title !== metadata.title) void api<DocumentMeta>(`/documents/${documentId}`, { method: 'PATCH', body: JSON.stringify({ title }) }).catch((reason: Error) => setError(reason.message))
           }} />
           : <h1 className="title-text">{title}</h1>}
-        <span className={`connection ${status}`} role="status">{status === 'connected' ? saved : connectionLabels[status]}</span>
+        <span className={`save-status ${state}`} role="status" title={stateHint}>{saveStateIcons[state]}{stateText}</span>
       </div>
       <div className="doc-actions">
         <button className={`btn-ghost wide-only${pressed('history')}`} aria-expanded={panel === 'history'} onClick={() => toggle('history')}><HistoryIcon />История</button>
@@ -109,17 +121,41 @@ function EditorHeader({ back, documentId, metadata, title, setTitle, role, setEr
   )
 }
 
+// Без фокуса на mousedown выделение остаётся в редакторе: курсор не мигает у соавторов, а ввод не уходит в кнопку.
+const keepFocus = (event: MouseEvent) => event.preventDefault()
+
 function EditorToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
+  // Оформление под курсором: стиль абзаца в списке, нажатые «Ж», «К» и списки.
+  const active = useEditorState({
+    editor,
+    selector: ({ editor: current }) => ({
+      bold: current?.isActive('bold') ?? false,
+      italic: current?.isActive('italic') ?? false,
+      bullet: current?.isActive('bulletList') ?? false,
+      ordered: current?.isActive('orderedList') ?? false,
+      level: ([1, 2, 3] as const).find((level) => current?.isActive('heading', { level })) ?? 0,
+    }),
+  })
   return (
     <nav className="toolbar" aria-label="Форматирование текста">
-      {/* focus возвращает выделение в редактор после нажатия кнопки панели. */}
-      <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()} aria-label="Жирный"><strong>Ж</strong></button>
-      <button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()} aria-label="Курсив"><em>К</em></button>
-      {([1, 2, 3] as const).map((level) => (
-        <button type="button" key={level} onClick={() => editor?.chain().focus().toggleHeading({ level }).run()} aria-label={`Заголовок ${level}`}>H{level}</button>
-      ))}
-      <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()}>• Список</button>
-      <button type="button" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>1. Список</button>
+      <div className="notch">
+        <select aria-label="Стиль текста" value={active.level} disabled={!editor} onChange={(event) => {
+          const level = Number(event.target.value) as 0 | 1 | 2 | 3
+          if (level) editor?.chain().focus().setHeading({ level }).run()
+          else editor?.chain().focus().setParagraph().run()
+        }}>
+          <option value={0}>Обычный текст</option>
+          <option value={1}>Заголовок 1</option>
+          <option value={2}>Заголовок 2</option>
+          <option value={3}>Заголовок 3</option>
+        </select>
+        <span className="toolbar-gap" />
+        <button type="button" className="icon-button" onMouseDown={keepFocus} aria-pressed={active.bold} onClick={() => editor?.chain().focus().toggleBold().run()} aria-label="Жирный" title="Жирный, Ctrl+B"><strong>Ж</strong></button>
+        <button type="button" className="icon-button" onMouseDown={keepFocus} aria-pressed={active.italic} onClick={() => editor?.chain().focus().toggleItalic().run()} aria-label="Курсив" title="Курсив, Ctrl+I"><em>К</em></button>
+        <span className="toolbar-gap" />
+        <button type="button" className="icon-button" onMouseDown={keepFocus} aria-pressed={active.bullet} onClick={() => editor?.chain().focus().toggleBulletList().run()} aria-label="Маркированный список" title="Маркированный список"><BulletListIcon /></button>
+        <button type="button" className="icon-button" onMouseDown={keepFocus} aria-pressed={active.ordered} onClick={() => editor?.chain().focus().toggleOrderedList().run()} aria-label="Нумерованный список" title="Нумерованный список"><OrderedListIcon /></button>
+      </div>
     </nav>
   )
 }

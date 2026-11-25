@@ -3,11 +3,16 @@ import type { ControlMessage, Role, Version } from './api'
 // Подписи интерфейса, которые повторяются в нескольких компонентах.
 export const roleLabels: Record<Role, string> = { owner: 'Владелец', editor: 'Редактор', viewer: 'Читатель' }
 export const versionKindLabels: Record<Version['kind'], string> = { manual: 'Сохранена вручную', scheduled: 'Автосохранение', export: 'Экспорт в PDF' }
-export const saveStatusLabels: Record<Exclude<ControlMessage['status'], 'role_changed'>, string> = {
-  saved: 'Сохранено', unsaved: 'Есть несохранённые изменения', error: 'Ошибка сохранения',
+// Статус в шапке: цвет точки по смыслу (VIS-3), полная формулировка во всплывающей подсказке.
+export type SaveState = Exclude<ControlMessage['status'], 'role_changed'> | 'syncing' | 'offline' | 'connecting'
+export const saveStateLabels: Record<SaveState, [text: string, hint: string]> = {
+  connecting: ['Подключаемся…', 'Подключаемся к серверу'],
+  syncing: ['Сохраняем…', 'Проверяем, всё ли сохранено'],
+  unsaved: ['Сохраняем…', 'Изменения отправляются на сервер'],
+  saved: ['Сохранено', 'Все изменения сохранены на сервере'],
+  error: ['Не удалось сохранить', 'Сервер не смог сохранить изменения'],
+  offline: ['Нет соединения', 'Нет связи с сервером: изменения пока только в этой вкладке'],
 }
-export const OFFLINE = 'Нет соединения'
-export const connectionLabels = { connecting: 'Подключение…', connected: 'Соединение установлено', disconnected: OFFLINE }
 export const formatDateTime = (value: string) => new Date(value).toLocaleString('ru-RU')
 export const formatTime = (value: string) => new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
 

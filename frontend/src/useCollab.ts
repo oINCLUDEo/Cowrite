@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { WebsocketProvider } from 'y-websocket'
 import * as Y from 'yjs'
 import { wsUrl, type ControlMessage, type DocumentMeta } from './api'
-import { OFFLINE, saveStatusLabels } from './labels'
+import type { SaveState } from './labels'
 import { getAccessToken, logout } from './session'
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected'
@@ -11,7 +11,7 @@ export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected'
 export function useCollabSession(metadata: DocumentMeta) {
   const documentId = metadata.id
   const [status, setStatus] = useState<ConnectionStatus>('connecting')
-  const [saved, setSaved] = useState('Синхронизация…')
+  const [saved, setSaved] = useState<SaveState>('syncing')
   const [role, setRole] = useState(metadata.role)
   const [error, setError] = useState('')
   // Один Y.Doc и одно соединение на открытый редактор, не на каждый рендер.
@@ -52,14 +52,14 @@ export function useCollabConnection(collab: ReturnType<typeof useCollabSession>,
       control.onmessage = (event) => {
         const data = JSON.parse(String(event.data)) as ControlMessage
         if (data.role) setRole(data.role)
-        if (data.status !== 'role_changed') setSaved(saveStatusLabels[data.status] || 'Синхронизация…')
+        if (data.status !== 'role_changed') setSaved(['saved', 'unsaved', 'error'].includes(data.status) ? data.status : 'syncing')
       }
-      control.onclose = () => { if (active) { setSaved(OFFLINE); reconnect = setTimeout(openControl, 2000) } }
+      control.onclose = () => { if (active) { setSaved('offline'); reconnect = setTimeout(openControl, 2000) } }
     }
     const onStatus = ({ status: value }: { status: ConnectionStatus }) => {
       setStatus(value)
       if (value === 'connected') openControl()
-      else setSaved(OFFLINE)
+      else setSaved('offline')
     }
     const onClose = (event: CloseEvent | null) => {
       if (event?.code === 4409) {
@@ -78,7 +78,7 @@ export function useCollabConnection(collab: ReturnType<typeof useCollabSession>,
       session.provider.disconnect()
       control?.close()
       setStatus('disconnected')
-      setSaved(OFFLINE)
+      setSaved('offline')
     }
     const online = () => { session.provider.connect() }
     window.addEventListener('offline', offline)

@@ -18,7 +18,23 @@ input::placeholder { color: var(--muted); opacity: 1; }
 input:hover, select:hover { border-color: var(--muted); }
 input:focus-visible, select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .25); }
 button:disabled { color: var(--faint); background: var(--surface); border-color: var(--border); cursor: default; }
-.auth-form { display: grid; gap: 14px; max-width: 320px; margin: 24px auto; }
+.auth-form { display: grid; gap: 16px; }
+/* Вход (VIS-11): карточка на фоне с двумя мягкими заливками и зерном; на телефоне карточка без рамки на всю ширину. */
+.auth-page { position: relative; isolation: isolate; min-height: 100vh; padding: 15vh 16px 48px; background: radial-gradient(520px 380px at 18% 22%, rgba(37, 99, 235, .08), transparent 70%), radial-gradient(560px 420px at 82% 78%, rgba(37, 99, 235, .08), transparent 70%), var(--bg); }
+.auth-page::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .06; mix-blend-mode: overlay; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.auth-card { max-width: 400px; margin: 0 auto; padding: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 1px 2px rgba(11, 18, 32, .06); }
+.auth-card .logo { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; font: 800 20px/1 var(--font-display); letter-spacing: -.03em; }
+.auth-card .logo svg { color: var(--accent); }
+.two-tone { margin: 0 0 24px; font-size: 24px; font-weight: 800; line-height: 1.25; letter-spacing: -.03em; }
+.two-tone span { display: block; color: var(--muted); }
+.field { display: grid; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; }
+.hint { font-size: 13px; color: var(--muted); }
+.form-error { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--danger-soft); color: var(--danger); font-size: 14px; }
+.or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.link-button { display: block; margin: 20px auto 0; padding: 4px 8px; border: 0; background: none; color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.link-button:hover:not(:disabled) { background: none; color: var(--accent-hover); }
 .auth-form .btn-primary { min-height: 44px; }
 .github-button { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 600; text-decoration: none; }
 .github-button:hover { background: var(--surface-2); color: var(--ink); }
@@ -45,7 +61,7 @@ button:hover:not(:disabled) { background: var(--surface-2); }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .icon-button { width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-color: transparent; background: transparent; }
 /* Шапка редактора (VIS-2): «‹», название со статусом, действия справа. */
-.doc-header { min-height: 56px; display: flex; align-items: center; gap: 8px; padding: 0 16px 0 12px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.doc-header { position: sticky; top: 0; z-index: 5; min-height: 56px; display: flex; align-items: center; gap: 8px; padding: 0 16px 0 12px; background: var(--surface); box-shadow: 0 1px 0 rgba(11, 18, 32, .08); }
 .doc-title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
 .title-input { width: 420px; max-width: 100%; padding: 6px 8px; border-color: transparent; background: transparent; font-weight: 600; text-overflow: ellipsis; }
 @supports (field-sizing: content) { .title-input { width: auto; max-width: 420px; min-width: 8ch; field-sizing: content; } }
@@ -63,7 +79,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 /* История версий справа (VIS-5, VIS-7): от 1200 px колонкой рядом с бумагой, уже — поверх документа, на телефоне нижним листом. */
 .workspace.with-side { display: grid; grid-template-columns: minmax(0, 1fr) 360px; align-items: start; }
 .workspace-main { min-width: 0; }
-.side-panel { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-left: 1px solid var(--border); }
+.side-panel { position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; background: var(--surface); border-left: 1px solid var(--border); }
 .side-head { display: flex; align-items: center; gap: 4px; padding: 16px 12px 12px 24px; }
 .side-head h2 { flex: 1; margin: 0; font-size: 20px; }
 .side-body { padding: 0 24px 24px; }
@@ -95,25 +111,49 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 }
 .editor-header { padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-bottom: 1px solid var(--border); }
 .brand { font-family: var(--font-display); font-size: 25px; font-weight: 800; letter-spacing: -.03em; color: var(--accent); text-decoration: none; }
-.connection { font-size: 14px; }
-.connected { color: var(--success); }
-.disconnected { color: var(--danger); }
+.save-status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.save-status svg { width: 16px; height: 16px; }
+.save-status.offline svg { color: var(--warning); }
+.save-status.error { color: var(--danger); }
 .notice { padding: 12px 24px; background: var(--warning-soft); color: var(--warning); font-size: 14px; }
-.toolbar { display: flex; gap: 8px; padding: 16px 24px; flex-wrap: wrap; justify-content: center; }
-.paper { max-width: 850px; min-height: 900px; margin: 0 auto 40px; background: var(--surface); box-shadow: 0 2px 14px #19243310; }
-.document-editor { min-height: 900px; padding: 64px; outline: none; line-height: 1.7; overflow-wrap: anywhere; }
+/* Панель форматирования — «чёлка» под шапкой, как вырез iPhone: язычок по центру листа, нижние углы скруглены, у шапки углы вогнутые. */
+.toolbar { position: sticky; top: 56px; z-index: 6; display: flex; justify-content: center; pointer-events: none; }
+.notch { position: relative; display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 16px; pointer-events: auto; background: var(--surface); border-radius: 0 0 16px 16px; filter: drop-shadow(0 1px 0 rgba(11, 18, 32, .1)); }
+.notch::before, .notch::after { content: ""; position: absolute; top: 0; width: 16px; height: 16px; }
+.notch::before { right: 100%; background: radial-gradient(circle at 0 100%, transparent 15.5px, var(--surface) 16px); }
+.notch::after { left: 100%; background: radial-gradient(circle at 100% 100%, transparent 15.5px, var(--surface) 16px); }
+.toolbar select { height: 32px; padding: 4px 8px; border-color: transparent; background: var(--surface-2); font-size: 14px; }
+.toolbar .icon-button { width: 32px; height: 32px; font-size: 15px; }
+.toolbar .icon-button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-hover); }
+.toolbar-gap { width: 12px; flex-shrink: 0; }
+/* Лист и текст документа (VIS-16): 24 px от панели, поля 72/80, заголовки 32/24/20, пункты списка без абзацных отступов. */
+.paper { max-width: 850px; min-height: 900px; margin: 24px auto 40px; border-radius: 4px; background: var(--surface); box-shadow: 0 1px 3px rgba(11, 18, 32, .08), 0 0 0 1px rgba(11, 18, 32, .04); }
+.document-editor { min-height: 900px; padding: 72px 80px; outline: none; line-height: 1.7; overflow-wrap: anywhere; }
+.document-editor > :first-child { margin-top: 0; }
 .document-editor p { margin: 0 0 12px; }
-.document-editor h1, .document-editor h2, .document-editor h3 { line-height: 1.25; }
+.document-editor h1 { margin: 28px 0 12px; font-size: 32px; line-height: 1.2; }
+.document-editor h2 { margin: 24px 0 8px; font-size: 24px; line-height: 1.25; }
+.document-editor h3 { margin: 20px 0 8px; font-size: 20px; line-height: 1.3; }
+.document-editor ul, .document-editor ol { margin: 0 0 12px; padding-left: 24px; }
+.document-editor li { margin: 4px 0; }
+.document-editor li > p { margin: 0; }
+.document-editor p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; height: 0; color: var(--muted); pointer-events: none; }
 .collaboration-carets__caret { border-left: 1px solid; border-right: 1px solid; margin-left: -1px; margin-right: -1px; pointer-events: none; position: relative; word-break: normal; }
 .collaboration-carets__label { border-radius: 3px 3px 3px 0; color: white; font-size: 12px; font-weight: 600; left: -1px; line-height: normal; padding: 2px 5px; position: absolute; top: -1.5em; user-select: none; white-space: nowrap; }
 .auth-state { max-width: 680px; margin: 15vh auto; padding: 48px 32px; text-align: center; }
 .auth-state h1 { font-size: 24px; margin: 0 0 16px; }
-@media (max-width: 700px) { .editor-header { padding: 16px; gap: 12px; } .document-editor { padding: 24px; } .auth-state { margin: 30px 12px; } }
+@media (max-width: 700px) { .editor-header { padding: 16px; gap: 12px; } .paper { margin: 0; border-radius: 0; box-shadow: none; min-height: 0; } .document-editor { padding: 24px 16px; min-height: calc(100vh - 104px); } .auth-state { margin: 30px 12px; } .auth-page { padding: 0; background: var(--surface); } .auth-page::before { display: none; } .auth-card { max-width: none; padding: 32px 16px 8px; border: 0; border-radius: 0; box-shadow: none; } }
 @media (max-width: 700px) {
   .doc-header { padding: 0 4px; gap: 2px; }
+  /* Чёлка с вогнутыми углами помещается и в 360 px: без промежутков между группами, кнопки 38 px. */
+  .notch { height: 48px; padding: 0 8px; }
+  .toolbar .icon-button { width: 38px; height: 38px; }
+  .toolbar select { padding: 4px 6px; }
+  .toolbar-gap { width: 0; }
   .doc-title { flex-direction: column; align-items: stretch; gap: 0; }
   .title-input, .title-text { width: 100%; max-width: 100%; padding: 1px 4px; font-size: 15px; field-sizing: fixed; }
-  .doc-title .connection { padding: 0 5px; font-size: 12px; }
+  .doc-title .save-status { padding: 0 5px; font-size: 12px; gap: 5px; }
+  .doc-title .save-status svg { width: 14px; height: 14px; }
   .icon-button { width: 40px; height: 40px; }
   .doc-actions .wide-only { display: none; }
   .doc-actions .narrow-only { display: inline-flex; }
